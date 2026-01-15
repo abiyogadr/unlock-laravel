@@ -1,0 +1,314 @@
+/* --- 1. SETUP HALAMAN --- */
+body {
+    margin: 0; padding: 0;
+    background: #f0f2f5;
+    font-family: 'Roboto', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh;
+}
+
+.main-layout {
+    display: flex; flex-direction: column; align-items: center;
+    width: 100%; max-width: 100%;
+    padding: 40px 20px; box-sizing: border-box;
+}
+
+/* --- A. SUMBER SERTIFIKAT (TERSEMBUNYI) --- */
+#cert-source-wrapper {
+    position: absolute;
+    left: -99999px; top: 0;
+    width: 1122.5px; height: 793.7px;
+}
+
+#cert-scale-container {
+    position: relative;
+    width: 1122.5px; height: 793.7px;
+}
+
+.certificate-wrapper {
+    position: absolute; top: 0; left: 0;
+    width: 297mm; height: 210mm;
+    transform-origin: top left;
+    display: flex; justify-content: center;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    border-radius: 2px; overflow: hidden;
+    background-color: #ffffff;
+}
+
+.certificate-paper {
+    position: relative; width: 100%; height: 100%; color: #333;
+}
+
+/* --- 2. BACKGROUND DESIGN --- */
+.bg-texture {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: radial-gradient(#40224f 0.8px, transparent 0.8px);
+    background-size: 25px 25px; opacity: 0.07; z-index: 0;
+}
+
+.wave-bg {
+    position: absolute; width: 150%; height: 100%;
+    background: rgba(64, 34, 79, 0.03);
+    border-radius: 40%; top: -40%; left: -20%;
+    transform: rotate(-15deg); z-index: 0;
+}
+
+.wave-bg-2 {
+    position: absolute; width: 120%; height: 80%;
+    background: rgba(255, 100, 7, 0.03);
+    border-radius: 45%; bottom: -30%; right: -10%;
+    transform: rotate(10deg); z-index: 0;
+}
+
+.shape { position: absolute; z-index: 2; }
+
+.tl-capsule { 
+    width: 250px; height: 60px; 
+    background: linear-gradient(135deg, #ff6407, #ff9045); 
+    top: 40px; left: -60px; transform: rotate(-45deg); border-radius: 50px;
+    box-shadow: 4px 4px 20px rgba(255, 100, 7, 0.3);
+}
+
+.tl-stripe {
+    width: 150px; height: 20px; background: #40224f;
+    top: 20px; left: 40px; transform: rotate(-45deg); border-radius: 20px;
+}
+
+.tl-circle {
+    width: 40px; height: 40px; border: 4px solid #40224f;
+    border-radius: 50%; top: 110px; left: 10px; opacity: 0.2;
+}
+
+.br-capsule { 
+    width: 300px; height: 80px; 
+    background: linear-gradient(135deg, #40224f, #6a3085); 
+    bottom: 40px; right: -80px; transform: rotate(-45deg); border-radius: 60px;
+    box-shadow: 4px 4px 20px rgba(64, 34, 79, 0.3);
+}
+
+.br-stripe {
+    width: 180px; height: 25px; background: #ff6407;
+    bottom: 140px; right: 10px; transform: rotate(-45deg); border-radius: 20px;
+}
+
+.br-dots {
+    position: absolute; bottom: 50px; right: 250px; display: flex; gap: 10px;
+}
+
+.dot { width: 10px; height: 10px; background: #ff6407; border-radius: 50%; opacity: 0.6; }
+
+/* --- 3. KONTEN UTAMA SERTIFIKAT --- */
+.content-container {
+    position: relative; z-index: 10;
+    width: 100%; height: 100%;
+    padding: 30px 60px; box-sizing: border-box;
+    text-align: center;
+    display: flex; flex-direction: column;
+}
+
+.logo-area {
+    height: 50px; margin-bottom: 10px; margin-top: 20px;
+    display: flex; justify-content: center; align-items: flex-end;
+}
+
+.logo-img {
+    height: 150%; width: auto; object-fit: contain; display: block;
+}
+
+.top-section {
+    margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;
+}
+
+.cert-header {
+    font-family: 'Roboto', sans-serif; font-size: 24pt; font-weight: 900;
+    color: #40224f; text-transform: uppercase; letter-spacing: 3px; margin-top: 30px;
+}
+
+.presented-label {
+    font-size: 10pt; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px; margin-bottom: 5px;
+}
+
+.recipient-name {
+    font-family: 'Roboto', cursive; font-size: 28pt; color: #ff6407;
+    margin: 0; line-height: 1.2; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.webinar-info { margin-top: 5px; }
+
+.webinar-badge {
+    font-size: 10pt; font-weight: 700; color: #fff;
+    background: #40224f; padding: 4px 15px; border-radius: 20px;
+    display: inline-block; margin-bottom: 5px; text-transform: uppercase;
+}
+
+.main-title {
+    font-size: 16pt; font-weight: 800; color: #333;
+    line-height: 1.1; margin: 5px 0; text-transform: uppercase;
+}
+
+.sub-title {
+    font-size: 11pt; color: #666; font-style: italic; font-weight: 400; margin-bottom: 10px;
+}
+
+.presenter-box { margin-bottom: 10px; }
+
+.presenter-intro { font-size: 10pt; color: #555; margin-bottom: 2px; }
+
+.presenter-name { font-size: 18pt; font-weight: 700; color: #40224f; margin: 0; }
+
+.presenter-titles {
+    font-size: 8pt; color: #666; max-width: 90%; margin: 2px auto; line-height: 1.3;
+}
+
+.event-info {
+    font-size: 10pt; color: #444; margin-top: 10px;
+    background: rgba(255, 100, 7, 0.05); padding: 8px 20px; border-radius: 8px; display: inline-block;
+}
+
+.bold-orange { color: #ff6407; font-weight: 700; }
+
+.signature-block {
+    position: absolute; bottom: 70px; left: 200px; z-index: 20;
+    text-align: center; width: 200px;
+}
+
+.sig-img {
+    height: 60px; margin-bottom: 5px;
+    /* background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="150" height="50"><path d="M10,40 Q40,10 80,40 T140,20" stroke="%23000" fill="none" stroke-width="2"/></svg>'); */
+    background-repeat: no-repeat; background-position: center;
+}
+
+.sig-line { height: 1px; background: #ccc; margin-bottom: 5px; }
+
+.sig-name { font-weight: 700; font-size: 10pt; color: #333; display: block; }
+
+.sig-role { font-size: 9pt; color: #666; }
+
+.qr-block {
+    position: absolute; bottom: 70px; right: 200px; z-index: 20;
+    text-align: right; display: flex; flex-direction: column; align-items: center;
+}
+
+#qrcode-container {
+    width: 85px; height: 85px;
+    background: white;
+    display: flex; justify-content: center; align-items: center;
+    margin-bottom: 5px;
+}
+
+.qr-text { font-size: 0.75rem; color: #999; line-height: 1.3; }
+
+/* --- B. AREA IMG HASIL RENDER --- */
+#cert-image-wrapper {
+    width: 100%;
+    max-width: 297mm;
+    background: white;
+    border-radius: 2px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+#cert-image-wrapper img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+#cert-loading {
+    padding: 30px;
+    text-align: center;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+/* --- ACTION BAR --- */
+.action-bar {
+    width: 100%; max-width: 297mm;
+    background: white;
+    padding: 20px 25px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    box-sizing: border-box;
+    border: 1px solid rgba(0,0,0,0.03);
+    flex-wrap: nowrap;
+}
+
+.ab-section {
+    display: flex; flex-direction: column; gap: 8px;
+}
+
+#section-url { flex-grow: 1; }
+
+#section-download { width: 160px; }
+
+.ab-label {
+    font-size: 0.7rem; font-weight: 700; color: #9ca3af;
+    text-transform: uppercase; letter-spacing: 1px;
+}
+
+.h-uniform { height: 45px; box-sizing: border-box; }
+
+.url-group { display: flex; width: 100%; }
+
+.url-input {
+    flex-grow: 1; width: 100%;
+    border: 1px solid #e5e7eb; background: #f9fafb; padding: 0 15px;
+    border-radius: 8px 0 0 8px; font-size: 0.9rem; color: #4b5563; outline: none;
+}
+
+.url-input:focus { border-color: #40224f; background: #fff; }
+
+.btn-copy {
+    background: #40224f; color: white; border: none; padding: 0 20px;
+    border-radius: 0 8px 8px 0; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; font-size: 0.9rem; white-space: nowrap;
+}
+
+.btn-copy:hover { background: #5a2f6f; }
+
+.share-icons { display: flex; gap: 10px; }
+
+.share-btn {
+    width: 45px; height: 45px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none; color: white; font-size: 1.1rem; flex-shrink: 0;
+}
+
+.bg-linkedin { background: #0077b5; }
+.bg-whatsapp { background: #25d366; } 
+.bg-x { background: #000; }
+
+.btn-download {
+    width: 100%; background: #ff6407; color: white; border: none;
+    border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: 'Roboto', sans-serif; transition: background 0.2s;
+}
+
+.btn-download:hover { background: #e55600; }
+.btn-download:disabled { background: #ccc; cursor: not-allowed; }
+
+/* Responsive */
+@media (max-width: 900px) {
+    .action-bar {
+        flex-wrap: wrap;
+        padding: 20px;
+        gap: 15px;
+    }
+    
+    #section-url { width: 100%; order: 1; }
+    #section-share { width: auto; order: 2; flex-grow: 1; }
+    #section-download { width: auto; min-width: 140px; order: 3; flex-grow: 0; }
+    
+    .ab-label { margin-left: 2px; }
+}
+
+@media (max-width: 400px) {
+    .share-btn { width: 40px; height: 40px; }
+    .btn-download { font-size: 0.8rem; padding: 0 10px; }
+}

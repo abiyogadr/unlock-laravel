@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source "../**/*.blade.php";
+@source "../**/*.js";
+@source "../**/*.vue";
+
+@theme {
+  --font-poppins: 'Poppins', sans-serif;
+  --color-primary: #46006D;
+  --color-secondary: #F97316;
+  --color-gray-50: #F9FAFB;
+  --color-gray-800: #1F2937;
+  --color-gray-600: #6B7280;
+  --color-gray-500: #9CA3AF;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-poppins);
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-secondary text-white px-6 py-3 rounded-lg font-semibold 
+           hover:bg-orange-600 transition duration-300 shadow-lg;
+  }
+  .pagination-link {
+      @apply px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary;
+  }
+  .pagination-active {
+      @apply px-3 py-2 text-sm font-medium text-white bg-primary border border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+.hero-pagination .swiper-pagination-bullet {
+    background: white !important;
+    opacity: 0.3;
+    width: 8px;
+    height: 8px;
+    margin: 0 4px !important;
+}
+.hero-pagination .swiper-pagination-bullet-active {
+    opacity: 1;
+    width: 20px;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
