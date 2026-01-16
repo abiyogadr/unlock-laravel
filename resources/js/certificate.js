@@ -8,7 +8,8 @@ function generateQRCode() {
     qrContainer.innerHTML = "";
     new QRCode(qrContainer, {
         text: qrText, width: 80, height: 80,
-        correctLevel: QRCode.CorrectLevel.H
+        correctLevel: QRCode.CorrectLevel.H,
+        useSVG: false
     });
 }
 
@@ -55,4 +56,44 @@ window.addEventListener('message', function(event) {
 window.addEventListener('load', function() {
     generateQRCode();
     setTimeout(renderCertificateToImage, 500); // Beri jeda agar font/gambar termuat
+});
+
+// Copy URL functionality
+document.getElementById('btnCopy').addEventListener('click', function() {
+    const certUrlInput = document.getElementById('cert-url');
+    certUrlInput.select();
+    certUrlInput.setSelectionRange(0, 99999); // For mobile devices
+    
+    try {
+        document.execCommand('copy');
+        // Visual feedback
+        this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        this.classList.add('bg-green-600');
+        setTimeout(() => {
+            this.innerHTML = '<i class="far fa-copy"></i> Copy';
+            this.classList.remove('bg-green-600');
+        }, 2000);
+    } catch (err) {
+        console.error('Copy failed:', err);
+        // Fallback for older browsers
+        prompt("Copy this URL:", certUrlInput.value);
+    }
+});
+
+// Download PNG functionality
+document.getElementById('downloadBtn').addEventListener('click', function() {
+    if (!certImageDataUrl) {
+        alert('Certificate is still rendering. Please wait...');
+        return;
+    }
+    
+    // Create temporary link element
+    const link = document.createElement('a');
+    link.href = certImageDataUrl;
+    link.download = 'certificate_' + Date.now() + '.png';
+    
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 });
