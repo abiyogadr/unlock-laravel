@@ -104,11 +104,18 @@
             <div class="flex gap-2">
                 {{-- USER: tombol Zoom & Absensi jika verified --}}
                 @if($status === 'verified')
-                    @if ($registration->event->link_zoom)
+                    @if ($registration->event->link_zoom && $registration->price > 0)
                     <a href="{{ $registration->event->link_zoom ?? '#' }}"
                     target="_blank"
                     class="px-4 py-2 bg-white text-green-700 text-sm font-bold rounded-lg shadow-sm hover:shadow-md transition-all">
                         <i class="fas fa-video mr-1"></i> Join Zoom
+                    </a>
+                    @endif
+                    @if ($registration->event->link_zoom && $registration->price == 0)
+                    <a href="{{ $registration->event->link_live_youtube ?? '#' }}"
+                    target="_blank"
+                    class="px-4 py-2 bg-white text-green-700 text-sm font-bold rounded-lg shadow-sm hover:shadow-md transition-all">
+                        <i class="fas fa-video mr-1"></i> Live YT
                     </a>
                     @endif
                     @if ($registration->event->link_materi)

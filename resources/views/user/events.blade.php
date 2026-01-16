@@ -129,10 +129,16 @@
                             {{-- Action Footer --}}
                             <div class="pt-4 border-t border-gray-50 flex flex-wrap items-center gap-3 mt-auto">
                                 @if($currentStatus == 'success')
-                                    @if ($reg->event->link_zoom)
+                                    @if ($reg->event->link_zoom && $reg->price > 0)
                                     <a href="{{ $reg->event->link_zoom ?? '#' }}" target="_blank" 
                                        class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 text-sm font-semibold rounded-lg hover:bg-blue-100 transition-colors">
                                         <i class="fas fa-video mr-2"></i> Zoom
+                                    </a>
+                                    @endif
+                                    @if ($reg->event->link_live_youtube && $reg->price == 0)
+                                    <a href="{{ $reg->event->link_live_youtube ?? '#' }}" target="_blank" 
+                                       class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 text-sm font-semibold rounded-lg hover:bg-blue-100 transition-colors">
+                                        <i class="fas fa-video mr-2"></i> Live YT
                                     </a>
                                     @endif
                                     @if ($reg->event->link_materi)

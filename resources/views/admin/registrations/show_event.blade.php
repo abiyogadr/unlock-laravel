@@ -37,74 +37,80 @@
         
         {{-- Toolbar: Search & Filter --}}
         <div class="p-4 md:p-5 border-b border-gray-100">
-            <div class="flex flex-col lg:flex-row justify-between gap-4">
+            <div class="flex flex-col justify-between gap-4">
                 <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                     <i class="fas fa-users text-gray-400"></i> Daftar Peserta
                 </h3>
-                <div class="flex gap-4">
-                    {{-- PEMBUNGKUS TOGGLE --}}
+                <div class="flex items-center gap-4">
+                    {{-- Toggle Presensi --}}
                     <div x-data="{ 
-                        is_open: {{ $event->is_attendance_open ? 'true' : 'false' }},
-                        loading: false,
-                        async toggle() {
-                            if (this.loading) return;
-                            this.loading = true;
-                            
-                            try {
-                                let response = await fetch('{{ route('admin.events.toggle_attendance', $event->id) }}', {
-                                    method: 'PATCH',
-                                    headers: { 
-                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                        'Content-Type': 'application/json',
-                                        'Accept': 'application/json'
-                                    }
-                                });
+                            is_open: {{ $event->is_attendance_open ? 'true' : 'false' }},
+                            loading: false,
+                            async toggle() {
+                                if (this.loading) return;
+                                this.loading = true;
                                 
-                                let data = await response.json();
-                                if (data.success) {
-                                    this.is_open = data.is_open;
+                                try {
+                                    let response = await fetch('{{ route('admin.events.toggle_attendance', $event->id) }}', {
+                                        method: 'PATCH',
+                                        headers: { 
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                            'Content-Type': 'application/json',
+                                            'Accept': 'application/json'
+                                        }
+                                    });
+                                    
+                                    let data = await response.json();
+                                    if (data.success) {
+                                        this.is_open = data.is_open;
+                                    }
+                                } catch (error) {
+                                    alert('Gagal mengubah status presensi');
+                                } finally {
+                                    this.loading = false;
                                 }
-                            } catch (error) {
-                                alert('Gagal mengubah status presensi');
-                            } finally {
-                                this.loading = false;
                             }
-                        }
-                    }" class="relative z-10 flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100">
+                        }" class="relative z-10 flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100">
                         
                         <span class="text-[10px] font-bold uppercase tracking-wider transition-colors" 
                             :class="is_open ? 'text-green-600' : 'text-gray-400'" 
                             x-text="is_open ? 'Presensi Buka' : 'Presensi Tutup'">
                         </span>
                         
-                        {{-- TOMBOL TOGGLE --}}
-                        <button type="button" 
-                                @click="toggle()" 
-                                :disabled="loading"
+                        <button type="button" @click="toggle()" :disabled="loading"
                                 class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none shadow-inner"
                                 :class="is_open ? 'bg-green-500' : 'bg-gray-300'">
-                            
-                            {{-- BULATAN TOGGLE --}}
                             <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 shadow-sm"
                                 :class="is_open ? 'translate-x-6' : 'translate-x-1'">
                             </span>
                         </button>
                     </div>
-                    <button @click="openModal()" class="px-4 py-2 hidden md:block bg-primary text-white rounded-lg text-sm font-bold flex items-center gap-2 cursor-pointer">
-                        <i class="fas fa-book"></i> Generate Sertifikat 
-                    </button>
-                    <a href="{{ route('admin.registrations.export', ['event_id' => $event->id]) }}" class="text-lg font-bold flex items-center gap-2">
-                        <i class="fas fa-download text-green-600"></i>
+
+                    {{-- Download Icon --}}
+                    <a href="{{ route('admin.registrations.export', ['event_id' => $event->id]) }}" 
+                    class="text-lg font-bold flex items-center gap-2 text-green-600 hover:text-green-700">
+                        <i class="fas fa-download"></i>
                     </a>
 
-                    {{-- Ganti bagian Form di Blade Anda dengan ini --}}
-                    <form method="GET" x-data>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:flex gap-2">
-                            
-                            {{-- Filter Status - Auto submit saat ganti status --}}
+                    {{-- Generate Sertifikat --}}
+                    <button @click="openModal()" 
+                            class="px-4 py-2 hidden md:block bg-primary text-white rounded-lg text-sm font-bold flex items-center gap-2 cursor-pointer hover:bg-primary/90 transition">
+                        <i class="fas fa-book"></i> Generate Sertifikat 
+                    </button>
+
+                    {{-- Tombol Baru: Kirim Reminder Email --}}
+                    <button onclick="sendReminderEmails({{ $event->id }})"
+                            class="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold flex items-center gap-2 cursor-pointer hover:bg-orange-600 transition hidden md:flex">
+                        <i class="fas fa-bell"></i> Kirim Reminder
+                    </button>
+
+                    {{-- Filter & Search di Kanan --}}
+                    <form method="GET" x-data class="ml-auto flex items-center gap-2 flex-1 lg:flex-none lg:w-96">
+                        <div class="flex items-center gap-2 w-full lg:w-auto">
+                            {{-- Filter Status --}}
                             <select name="status" 
                                     x-on:change="$el.form.submit()"
-                                    class="text-sm border border-primary/50 rounded-lg focus:ring-primary focus:border-primary w-full lg:w-44 bg-white">
+                                    class="text-sm border border-primary/50 rounded-lg focus:ring-primary focus:border-primary px-3 py-2 w-full lg:w-36 bg-white min-w-[140px]">
                                 <option value="all">Semua Status</option>
                                 <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                                 <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Verified</option>
@@ -112,25 +118,26 @@
                                 <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                             </select>
 
-                            {{-- Search - Auto submit saat berhenti mengetik (debounce) --}}
-                            <div class="relative w-full lg:w-64">
-                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            {{-- Search --}}
+                            <div class="relative flex-1 lg:w-52 min-w-0">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs z-10"></i>
                                 <input type="text" name="search" value="{{ request('search') }}" 
                                     x-on:input.debounce.500ms="$el.form.submit()"
                                     placeholder="Nama / Email / Kode..." 
                                     class="pl-9 pr-4 py-2 w-full text-sm border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
                             </div>
 
-                            {{-- Tombol Reset (Opsional, hanya muncul jika ada filter aktif) --}}
+                            {{-- Reset --}}
                             @if(request()->filled('search') || request('status', 'all') !== 'all')
                                 <a href="{{ route(request()->route()->getName(), $event->id) }}" 
-                                class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-red-100 transition">
-                                    <i class="fas fa-undo"></i> Reset
+                                class="px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium flex items-center justify-center hover:bg-red-100 transition whitespace-nowrap">
+                                    <i class="fas fa-times text-xs"></i>
                                 </a>
                             @endif
                         </div>
                     </form>
                 </div>
+
             </div>
         </div>
 
