@@ -109,7 +109,11 @@
                     class="px-4 py-2 bg-white text-green-700 text-sm font-bold rounded-lg shadow-sm hover:shadow-md transition-all">
                         <i class="fas fa-video mr-1"></i> Join Zoom
                     </a>
-                    
+                    <a href="{{ $registration->event->link_materi ?? '#' }}"
+                    target="_blank"
+                    class="px-4 py-2 bg-white text-green-700 text-sm font-bold rounded-lg shadow-sm hover:shadow-md transition-all">
+                        <i class="fas fa-link mr-1"></i> VB & Materi
+                    </a>
                 @endif
 
                 {{-- ADMIN: tombol verifikasi jika pending --}}
