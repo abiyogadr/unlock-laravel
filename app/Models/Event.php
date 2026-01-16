@@ -21,6 +21,7 @@ class Event extends Model
         'kv_path',
         'payment_unique_code',
         'is_attendance_open',
+        'link_zoom'
     ];
 
     protected $casts = [
