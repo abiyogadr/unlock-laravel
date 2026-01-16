@@ -129,14 +129,18 @@
                             {{-- Action Footer --}}
                             <div class="pt-4 border-t border-gray-50 flex flex-wrap items-center gap-3 mt-auto">
                                 @if($currentStatus == 'success')
+                                    @if ($reg->event->link_zoom)
                                     <a href="{{ $reg->event->link_zoom ?? '#' }}" target="_blank" 
                                        class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 text-sm font-semibold rounded-lg hover:bg-blue-100 transition-colors">
                                         <i class="fas fa-video mr-2"></i> Zoom
                                     </a>
+                                    @endif
+                                    @if ($reg->event->link_materi)
                                     <a href="{{ $reg->event->link_materi ?? '#' }}" target="_blank" 
                                        class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 text-sm font-semibold rounded-lg hover:bg-blue-100 transition-colors">
                                         <i class="fas fa-link mr-2"></i> VB & Materi
                                     </a>
+                                    @endif
                                     <!-- <a href="#" class="inline-flex items-center px-4 py-2 bg-green-50 text-green-700 text-sm font-semibold rounded-lg hover:bg-green-100 transition-colors">
                                         <i class="fab fa-whatsapp mr-2"></i> Grup WA
                                     </a> -->
