@@ -137,7 +137,7 @@
                 <div>
                     <h4 class="font-bold text-white mb-4">Produk</h4>
                     <ul class="space-y-2 text-sm text-white">
-                        <li><a href="#" class="hover:text-orange-300">Instant Meeting</a></li>
+                        <!-- <li><a href="#" class="hover:text-orange-300">Instant Meeting</a></li> -->
                         <li><a href="{{ route('event.index') }}" class="hover:text-orange-300">Event</a></li>
                         <li><a href="{{ route('certificate') }}" class="hover:text-orange-300">Sertifikat Saya</a></li>
                     </ul>
