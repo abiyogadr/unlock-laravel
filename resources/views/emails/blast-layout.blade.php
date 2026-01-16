@@ -63,6 +63,7 @@
             </div>
 
             <div class="footer">
+                <img src="{{ $trackingUrl }}" width="1" height="1" style="display:none !important; visibility:hidden; opacity:0;">
                 <p style="margin-bottom: 12px;">Tetap terhubung dengan kami:</p>
                 <p>
                     <a href="https://instagram.com/unlock.indonesia" class="social-link">Instagram</a>

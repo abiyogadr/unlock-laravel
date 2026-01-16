@@ -32,7 +32,6 @@ class ToolsController extends Controller
      */
     public function send(Request $request)
     {
-        // Validasi disesuaikan dengan input JSON dari Alpine.js [web:6]
         $request->validate([
             'subject'    => 'required|string',
             'content'    => 'required|string',
@@ -40,19 +39,42 @@ class ToolsController extends Controller
             'recipients.*.email' => 'required|email'
         ]);
 
-        $jobs = [];
         $recipients = $request->input('recipients');
-
-        // Membungkus setiap penerima ke dalam Job [web:66]
-        foreach ($recipients as $recipient) {
-            $jobs[] = new SendBlastEmail((object)$recipient, $request->subject, $this->convertTextToButtons($request->content));
-        }
-
-        // Menggunakan Job Batching untuk monitoring live [web:12]
-        // Pastikan table job_batches sudah ada (php artisan queue:batches-table)
-        $batch = Bus::batch($jobs)
+        
+        // 1. Buat Batch kosong terlebih dahulu untuk mendapatkan ID-nya [web:1]
+        $batch = Bus::batch([])
             ->name('Mail Blast: ' . $request->subject)
             ->dispatch();
+
+        $jobs = [];
+        $logs = [];
+
+        foreach ($recipients as $recipient) {
+            $email = $recipient['email'];
+            
+            // 2. Siapkan data untuk tabel log
+            $logs[] = [
+                'batch_id'   => $batch->id,
+                'email'      => $email,
+                'is_opened'  => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            // 3. Masukkan batch_id ke dalam Job agar Job bisa buat Tracking URL
+            $jobs[] = new SendBlastEmail(
+                (object)$recipient, 
+                $request->subject, 
+                $this->convertTextToButtons($request->content),
+                $batch->id // Tambahkan parameter ini
+            );
+        }
+
+        // 4. Simpan log secara massal (bulk insert) agar cepat
+        DB::table('email_blast_logs')->insert($logs);
+
+        // 5. Tambahkan jobs ke dalam batch yang sudah dibuat tadi
+        $batch->add($jobs);
 
         return response()->json([
             'batch_id' => $batch->id,
@@ -90,11 +112,11 @@ class ToolsController extends Controller
             ->get();
 
         $history = $batches->map(function ($batch) {
-            // Hitung success: processed - failed
+            // Hitung pengiriman: processed - failed
             $processed = $batch->total_jobs - $batch->pending_jobs;
             $success_count = $processed - $batch->failed_jobs;
             
-            // Status logic lengkap
+            // Logika Status
             $status = 'Sedang Mengirim';
             if ($batch->cancelled_at) {
                 $status = 'Dibatalkan';
@@ -102,6 +124,11 @@ class ToolsController extends Controller
                 $status = $batch->failed_jobs > 0 ? 'Gagal' : 'Selesai';
             }
             
+            // Hitung Statistik Open Rate dari tabel log
+            $total_logged = DB::table('email_blast_logs')->where('batch_id', $batch->id)->count();
+            $opened_count = DB::table('email_blast_logs')->where('batch_id', $batch->id)->where('is_opened', true)->count();
+            $open_rate = $total_logged > 0 ? round(($opened_count / $total_logged) * 100) : 0;
+
             // Datetime selesai: prioritas cancelled_at atau finished_at
             $datetime_selesai = $batch->cancelled_at ?: $batch->finished_at;
 
@@ -118,8 +145,11 @@ class ToolsController extends Controller
                 'total' => $batch->total_jobs,
                 'status' => $status,
                 'progress_percent' => $batch->total_jobs > 0 
-                    ? round(($success_count / $batch->total_jobs) * 100) 
-                    : 0
+                    ? round(($processed / $batch->total_jobs) * 100) 
+                    : 0,
+                // Data baru untuk tracking open
+                'open_rate' => $open_rate,
+                'opened' => $opened_count
             ];
         });
 
@@ -196,4 +226,26 @@ class ToolsController extends Controller
         
         return response()->json(['success' => true]);
     }
+
+    public function trackOpen(Request $request)
+    {
+        $batchId = $request->query('b');
+        $email = base64_decode($request->query('e'));
+
+        if ($batchId && $email) {
+            DB::table('email_blast_logs')
+                ->where('batch_id', $batchId)
+                ->where('email', $email)
+                ->where('is_opened', false)
+                ->update([
+                    'is_opened' => true,
+                    'opened_at' => now()
+                ]);
+        }
+
+        // Return gambar pixel transparan 1x1
+        $pixel = base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+        return response($pixel)->header('Content-Type', 'image/gif')->header('Cache-Control', 'no-cache');
+    }
+
 }

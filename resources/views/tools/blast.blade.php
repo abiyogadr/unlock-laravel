@@ -27,7 +27,7 @@
                     <div class="bg-gradient-to-r from-purple-500 to-orange-500 h-2 rounded-full transition-all duration-500" :style="'width: ' + progress + '%'"></div>
                 </div>
             </div>
-            <button @click="stopBatch()" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1">
+            <button @click="cancelBatch(batchId)" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 Batalkan
             </button>
@@ -173,6 +173,10 @@
                                 <span class="text-slate-300">/</span>
                                 <span class="font-bold text-slate-600" x-text="item.total"></span>
                             </div>
+                            <div class="text-[10px] font-bold text-purple-600 flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <span x-text="item.open_rate + '% Opened (' + item.opened + ')'"></span>
+                            </div>
                         </td>
                         <td class="px-8 py-2 text-right">
                             <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden mx-auto">
@@ -194,11 +198,18 @@
                                 class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" 
                                 x-text="item.status"
                             ></span>
+                            <button 
+                                x-show="item.status === 'Sedang Mengirim'"
+                                @click="if(confirm('Batalkan pengiriman ini?')) cancelBatch(item.batch_id)"
+                                class="text-[10px] font-bold text-rose-600 hover:text-rose-800 underline uppercase tracking-tighter transition-colors"
+                            >
+                                Batalkan
+                            </button>
                         </td>
                     </tr>
                 </template>
                 <tr x-show="history.length === 0">
-                    <td colspan="4" class="px-8 py-20 text-center text-slate-400 italic">Belum ada riwayat pengiriman.</td>
+                    <td colspan="6" class="px-8 py-20 text-center text-slate-400 italic">Belum ada riwayat pengiriman.</td>
                 </tr>
             </tbody>
         </table>
@@ -307,24 +318,32 @@ function blastManager() {
             this.pollProgress();
         },
 
-        // FIX: Fungsi Stop Batch
-        async stopBatch() {
-            if (confirm('Batalkan pengiriman?')) {
-                const res = await fetch(`/tools/email-blast/cancel/${this.batchId}`, {
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
-                });
-                
-                if (res.ok) {
-                    this.isSending = false;
-                    this.batchId = null;
-                    clearInterval(this.stopPolling);
+        // Ganti fungsi cancelBatch lama dengan ini agar lebih solid
+        async cancelBatch(batchId) {
+            if (confirm('Batalkan pengiriman ini?')) {
+                try {
+                    const res = await fetch(`/tools/email-blast/cancel/${batchId}`, {
+                        method: 'POST',
+                        headers: { 
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Content-Type': 'application/json' 
+                        }
+                    });
                     
-                    alert('Pengiriman dibatalkan.');
-                    
-                    setTimeout(() => {
-                        this.fetchHistory();
-                    }, 1000);
+                    if (res.ok) {
+                        // Jika yang di-cancel adalah batch yang sedang dipantau di atas
+                        if (this.batchId === batchId) {
+                            this.isSending = false;
+                            this.batchId = null;
+                            clearInterval(this.stopPolling);
+                        }
+                        
+                        // Refresh data tabel
+                        await this.fetchHistory();
+                        alert('Batch berhasil dibatalkan');
+                    }
+                } catch (err) {
+                    console.error('Gagal membatalkan batch:', err);
                 }
             }
         },
@@ -342,7 +361,7 @@ function blastManager() {
 
                 this.fetchHistory();
 
-                if (data.finishedAt) {
+                if (data.finishedAt || data.cancelledAt) {
                     clearInterval(this.stopPolling); // Stop polling saat selesai
                     this.isSending = false;
                     this.batchId = null;

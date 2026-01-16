@@ -206,3 +206,4 @@ Route::prefix('tools')->middleware(['auth', 'admin'])->name('tools.')->group(fun
     // Placeholder untuk tools masa depan (Contoh)
     // Route::prefix('whatsapp-bot')->name('wa.')->group(function () { ... });
 });
+Route::get('/tools/email-blast/track', [ToolsController::class, 'trackOpen'])->name('tools.email-blast.track');

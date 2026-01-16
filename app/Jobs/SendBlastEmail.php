@@ -5,43 +5,58 @@ namespace App\Jobs;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Support\Facades\RateLimiter;
 
 class SendBlastEmail implements ShouldQueue
 {
-    use Batchable, InteractsWithQueue, Queueable, SerializesModels;
+    public $timeout = 28800;
+    use Batchable, InteractsWithQueue, Queueable, SerializesModels, Dispatchable;
 
-    public function __construct(public $recipient, public $subject, public $content) {}
+    // Tambahkan $batchId ke dalam constructor
+    public function __construct(
+        public $recipient, 
+        public $subject, 
+        public $content,
+        public $batchId // Parameter baru
+    ) {}
+
+    public function retryUntil()
+    {
+        return now()->addHours(20);
+    }
 
     public function middleware()
     {
-        // Rate limit: 9 email per 120 detik (2 menit)
         return [(new \Illuminate\Queue\Middleware\RateLimited('blast-limiter'))];
     }
 
     public function handle()
-    {
+    {   
+        set_time_limit(28800);
         if ($this->batch()->cancelled()) return;
 
-        // 1. Ambil data nama dari recipient CSV
         $recipientName = $this->recipient->name ?? 'Unlockers';
 
-        // 2. Ganti tag {name} yang ada di dalam konten editor dengan nama asli
-        // Ini akan mengubah "Halo {name}" menjadi "Halo Budi" di dalam variabel $finalContent
+        // 1. Generate Tracking URL
+        $trackingUrl = route('tools.email-blast.track', [
+            'b' => $this->batchId,
+            'e' => base64_encode($this->recipient->email)
+        ]);
+
+        // 2. Ganti tag {name} di konten
         $finalContent = str_ireplace('{name}', $recipientName, $this->content);
 
-        // 3. Kirim ke mailer
+        // 3. Kirim ke mailer dengan menyertakan $trackingUrl
         Mail::send('emails.blast-layout', [
-            'body' => $finalContent, // Konten yang sudah berisi nama asli
-            'subject' => $this->subject
+            'body' => $finalContent,
+            'subject' => $this->subject,
+            'trackingUrl' => $trackingUrl // Teruskan ke layout blade
         ], function ($message) {
             $message->to($this->recipient->email)
                     ->subject($this->subject);
         });
     }
-
 }
