@@ -273,9 +273,15 @@ class AdminRegistrationController extends Controller
                 $attended = $reg->is_attended ? 'Ya' : 'Tidak';
                 $gender = $reg->gender === 'male' ? 'Laki-laki' : 'Perempuan';
 
-                // Handle feedback as JSON array
+                // Handle feedback as array (already casted by model)
                 $feedbackString = '';
-                if ($reg->feedback) {
+                if (is_array($reg->feedback) && isset($reg->feedback['selections'])) {
+                    $feedbackString = implode('; ', $reg->feedback['selections']);
+                    if (!empty($reg->feedback['other'])) {
+                        $feedbackString .= '; ' . $reg->feedback['other'];
+                    }
+                } elseif (is_string($reg->feedback)) {
+                    // Fallback if somehow it's a string
                     $feedbackData = json_decode($reg->feedback, true);
                     if (is_array($feedbackData) && isset($feedbackData['selections'])) {
                         $feedbackString = implode('; ', $feedbackData['selections']);
@@ -283,8 +289,10 @@ class AdminRegistrationController extends Controller
                             $feedbackString .= '; ' . $feedbackData['other'];
                         }
                     } else {
-                        $feedbackString = (string) $reg->feedback;
+                        $feedbackString = $reg->feedback;
                     }
+                } else {
+                    $feedbackString = (string) $reg->feedback;
                 }
 
                 fputcsv($file, [
