@@ -278,7 +278,7 @@ class AdminRegistrationController extends Controller
                 if (is_array($reg->feedback) && isset($reg->feedback['selections'])) {
                     $feedbackString = implode('|', $reg->feedback['selections']);
                     if (!empty($reg->feedback['other'])) {
-                        $feedbackString .= '|' . $reg->feedback['other'];
+                        $feedbackString .= isset($reg->feedback['selections']) ? '|' : '' . $reg->feedback['other'];
                     }
                 } elseif (is_string($reg->feedback)) {
                     // Fallback if somehow it's a string
@@ -286,7 +286,7 @@ class AdminRegistrationController extends Controller
                     if (is_array($feedbackData) && isset($feedbackData['selections'])) {
                         $feedbackString = implode('|', $feedbackData['selections']);
                         if (!empty($feedbackData['other'])) {
-                            $feedbackString .= '|' . $feedbackData['other'];
+                            $feedbackString .= isset($feedbackData['selections']) ? '|' : '' . $feedbackData['other'];
                         }
                     } else {
                         $feedbackString = $reg->feedback;
