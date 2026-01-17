@@ -276,17 +276,17 @@ class AdminRegistrationController extends Controller
                 // Handle feedback as array (already casted by model)
                 $feedbackString = '';
                 if (is_array($reg->feedback) && isset($reg->feedback['selections'])) {
-                    $feedbackString = implode('; ', $reg->feedback['selections']);
+                    $feedbackString = implode('|', $reg->feedback['selections']);
                     if (!empty($reg->feedback['other'])) {
-                        $feedbackString .= '; ' . $reg->feedback['other'];
+                        $feedbackString .= '|' . $reg->feedback['other'];
                     }
                 } elseif (is_string($reg->feedback)) {
                     // Fallback if somehow it's a string
                     $feedbackData = json_decode($reg->feedback, true);
                     if (is_array($feedbackData) && isset($feedbackData['selections'])) {
-                        $feedbackString = implode('; ', $feedbackData['selections']);
+                        $feedbackString = implode('|', $feedbackData['selections']);
                         if (!empty($feedbackData['other'])) {
-                            $feedbackString .= '; ' . $feedbackData['other'];
+                            $feedbackString .= '|' . $feedbackData['other'];
                         }
                     } else {
                         $feedbackString = $reg->feedback;
