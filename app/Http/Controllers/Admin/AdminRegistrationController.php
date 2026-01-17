@@ -275,18 +275,24 @@ class AdminRegistrationController extends Controller
 
                 // Handle feedback as array (already casted by model)
                 $feedbackString = '';
-                if (is_array($reg->feedback) && isset($reg->feedback['selections'])) {
-                    $feedbackString = implode('|', $reg->feedback['selections']);
+                if (is_array($reg->feedback)) {
+                    if (isset($reg->feedback['selections']) && is_array($reg->feedback['selections'])) {
+                        $feedbackString = implode('|', $reg->feedback['selections']);
+                    }
                     if (!empty($reg->feedback['other'])) {
-                        $feedbackString .= isset($reg->feedback['selections']) ? '|' : '' . $reg->feedback['other'];
+                        $separator = isset($reg->feedback['selections']) ? '|' : '';
+                        $feedbackString .= $separator . $reg->feedback['other'];
                     }
                 } elseif (is_string($reg->feedback)) {
                     // Fallback if somehow it's a string
                     $feedbackData = json_decode($reg->feedback, true);
-                    if (is_array($feedbackData) && isset($feedbackData['selections'])) {
-                        $feedbackString = implode('|', $feedbackData['selections']);
+                    if (is_array($feedbackData)) {
+                        if (isset($feedbackData['selections']) && is_array($feedbackData['selections'])) {
+                            $feedbackString = implode('|', $feedbackData['selections']);
+                        }
                         if (!empty($feedbackData['other'])) {
-                            $feedbackString .= isset($feedbackData['selections']) ? '|' : '' . $feedbackData['other'];
+                            $separator = isset($feedbackData['selections']) ? '|' : '';
+                            $feedbackString .= $separator . $feedbackData['other'];
                         }
                     } else {
                         $feedbackString = $reg->feedback;
