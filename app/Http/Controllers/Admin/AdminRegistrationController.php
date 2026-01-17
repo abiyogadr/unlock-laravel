@@ -273,13 +273,27 @@ class AdminRegistrationController extends Controller
                 $attended = $reg->is_attended ? 'Ya' : 'Tidak';
                 $gender = $reg->gender === 'male' ? 'Laki-laki' : 'Perempuan';
 
+                // Handle feedback as JSON array
+                $feedbackString = '';
+                if ($reg->feedback) {
+                    $feedbackData = json_decode($reg->feedback, true);
+                    if (is_array($feedbackData) && isset($feedbackData['selections'])) {
+                        $feedbackString = implode('; ', $feedbackData['selections']);
+                        if (!empty($feedbackData['other'])) {
+                            $feedbackString .= '; ' . $feedbackData['other'];
+                        }
+                    } else {
+                        $feedbackString = (string) $reg->feedback;
+                    }
+                }
+
                 fputcsv($file, [
                     $reg->registration_code, $reg->event_code, $reg->event_name, $reg->packet_name,
                     $reg->name, $reg->email, $reg->whatsapp, $gender, $reg->age,
                     $reg->province, $reg->city, $reg->profession, $channelString,
                     $reg->price, $reg->registration_status, $attended, $reg->attended_at,
                     $reg->payment, $reg->payment_status, $reg->paid_at, $reg->flag_sub,
-                    $reg->rating, $reg->feedback, $reg->next_theme_suggestion, $reg->created_at
+                    $reg->rating, $feedbackString, $reg->next_theme_suggestion, $reg->created_at
                 ]);
             }
             fclose($file);
