@@ -17,65 +17,42 @@ function generateQRCode() {
 function renderCertificateToImage() {
     const element = document.getElementById('certificate');
     const wrapper = document.getElementById('cert-image-wrapper');
+    if (!element || !wrapper) return;
 
-    // 1. Validasi awal: Pastikan elemen ada di DOM
-    if (!element) {
-        console.error("Gagal Render: Elemen #certificate tidak ditemukan.");
-        return;
-    }
-    if (!wrapper) {
-        console.warn("Peringatan: Elemen #cert-image-wrapper tidak ditemukan.");
-        return;
-    }
-
-    // 2. Eksekusi render dengan opsi stabil
     htmlToImage.toPng(element, { 
-        quality: 0.9, 
-        pixelRatio: 2, // Lebih tajam untuk sertifikat
-        cacheBust: true, // Menghindari masalah cache gambar
+        quality: 0.8, 
+        pixelRatio: 1,
+        skipFonts: false,
+        fontEmbedCSS: '',
     })
     .then(function (dataUrl) {
         certImageDataUrl = dataUrl;
         wrapper.innerHTML = `<img src="${dataUrl}" class="w-full h-auto shadow-lg" id="rendered-cert-img">`;
         
+        // ✅ FIXED: Use postMessage instead of CustomEvent for Android
         if (window.parent) {
-            window.parent.dispatchEvent(new CustomEvent('preview-loaded'));
+            window.parent.postMessage({
+                type: 'preview-loaded',
+                timestamp: Date.now()
+            }, '*');
         }
-        console.log("Render Berhasil: Gambar sertifikat telah diperbarui.");
     })
     .catch(function (error) {
-        // 3. Penangkapan Error Detail
-        let errorMessage = "Terjadi kesalahan yang tidak diketahui.";
-
-        if (error instanceof Error) {
-            // Jika error adalah objek Error standar (memiliki message & stack)
-            errorMessage = `Error: ${error.message}`;
-            console.error("Stack Trace:", error.stack);
-        } else if (typeof error === 'string') {
-            // Jika library melempar error dalam bentuk string
-            errorMessage = error;
-        } else if (error && error.isTrusted) {
-            // Menjelaskan kenapa muncul 'isTrusted: true'
-            errorMessage = "Error dipicu oleh interaksi sistem/browser (mungkin masalah CORS atau aset belum terload).";
-        }
-
-        console.error('Render Error Detail:', errorMessage);
-        console.dir(error); // Menampilkan struktur objek error lengkap di konsol
-
-        // Opsi: Tampilkan peringatan visual ke user
-        // alert("Gagal memuat gambar sertifikat. Silakan cek koneksi atau format gambar.");
+        console.error('Render Error:', error);
+        // Fallback: Show error message in wrapper
+        wrapper.innerHTML = '<p class="text-red-500">Failed to render certificate. Please check console.</p>';
     });
 }
 
 // 3. Listener Pesan dari Admin (Real-time Signature)
 window.addEventListener('message', function(event) {
-    if (event.data.type === 'UPDATE_SIGNATURE') {
+    // ✅ FIXED: Check for event.data and handle Android's isTrusted issue
+    if (event.data && event.data.type === 'UPDATE_SIGNATURE') {
         const sigImages = document.querySelectorAll('.sig-img');
         sigImages.forEach(img => {
             img.src = event.data.base64;
-            img.parentElement.style.visibility = 'visible'; // Paksa tampil
+            img.parentElement.style.visibility = 'visible';
         });
-        // Render ulang setelah gambar berubah
         setTimeout(renderCertificateToImage, 300);
     }
 });
@@ -83,27 +60,35 @@ window.addEventListener('message', function(event) {
 // Jalankan saat load
 window.addEventListener('load', function() {
     generateQRCode();
-    setTimeout(renderCertificateToImage, 500); // Beri jeda agar font/gambar termuat
+    setTimeout(renderCertificateToImage, 500);
 });
 
 // Copy URL functionality
-document.getElementById('btnCopy').addEventListener('click', function() {
+document.getElementById('btnCopy').addEventListener('click', async function() {
     const certUrlInput = document.getElementById('cert-url');
-    certUrlInput.select();
-    certUrlInput.setSelectionRange(0, 99999); // For mobile devices
+    const btn = this;
     
     try {
-        document.execCommand('copy');
+        // ✅ FIXED: Use modern Clipboard API with fallback
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(certUrlInput.value);
+        } else {
+            // Fallback for older Android
+            certUrlInput.select();
+            certUrlInput.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+        }
+        
         // Visual feedback
-        this.innerHTML = '<i class="fas fa-check"></i> Copied!';
-        this.classList.add('bg-green-600');
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btn.classList.add('bg-green-600');
         setTimeout(() => {
-            this.innerHTML = '<i class="far fa-copy"></i> Copy';
-            this.classList.remove('bg-green-600');
+            btn.innerHTML = '<i class="far fa-copy"></i> Copy';
+            btn.classList.remove('bg-green-600');
         }, 2000);
     } catch (err) {
         console.error('Copy failed:', err);
-        // Fallback for older browsers
+        // Last resort fallback
         prompt("Copy this URL:", certUrlInput.value);
     }
 });
@@ -115,12 +100,10 @@ document.getElementById('downloadBtn').addEventListener('click', function() {
         return;
     }
     
-    // Create temporary link element
     const link = document.createElement('a');
     link.href = certImageDataUrl;
     link.download = 'certificate_' + Date.now() + '.png';
     
-    // Trigger download
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
