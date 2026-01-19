@@ -7,8 +7,8 @@
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 
     {{-- Fonts & Icons --}}
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&family=Great+Vibes&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&family=Great+Vibes&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
 
     {{-- LOAD VITE: Pastikan resources/css/app.css berisi @tailwind --}}
     @vite(['resources/css/app.css', 'resources/js/certificate.js'])
@@ -46,8 +46,8 @@
         </div>
     </main>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" crossorigin="anonymous"></script>
 
 {{-- Tambahkan di bagian paling bawah sebelum </body> --}}
 <script>
