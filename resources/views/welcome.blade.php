@@ -24,10 +24,10 @@
                                 <div class="flex flex-wrap justify-center lg:justify-start gap-3 mb-6">
                                     {{-- Tombol Daftar Sekarang --}}
                                     @php
-                                        $LastEvent = $events->where('status', 'open')->first() 
+                                        $latestEvent = $events->where('status', 'open')->first() 
                                                     ?? $events->sortByDesc('date_start')->first();
                                     @endphp
-                                    <a href="{{ route('event.show', $LastEvent->event_code) }}"
+                                    <a href="{{ route('event.show', $latestEvent->event_code) }}"
                                     class="inline-flex items-center px-6 py-3 bg-secondary text-white text-sm font-bold rounded-xl shadow-lg hover:bg-orange-600 transition">
                                         Daftar Sekarang 
                                         <i class="fas fa-chevron-right ml-2 text-xs"></i>
@@ -42,8 +42,6 @@
                                 </div>
                             </div>
                             <div class="lg:w-4/12 w-full relative">
-                                @php $latestEvent = $events->where('status', 'open')->first(); @endphp
-                                
                                 @if($latestEvent)
                                     <div class="relative group">
                                         {{-- Decorative background elements --}}
