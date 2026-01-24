@@ -324,13 +324,13 @@ class AdminRegistrationController extends Controller
         // 1. Siapkan data yang WAJIB ada di DB agar tidak error 1364 (General Error)
         // Ambil dari request, jika kosong ambil dari DB lama, jika masih kosong pakai default
         $baseData = [
-            'event_title'    => $request->event_title ?? ($setup->event_title ?? $event->event_title),
-            'event_subtitle' => $request->event_subtitle ?? ($setup->event_subtitle ?? ''),
-            'speaker'        => $request->speaker ?? ($setup->speaker ?? 'Narasumber'),
-            'speaker_title'  => $request->speaker_title ?? ($setup->speaker_title ?? ''),
-            'date_string'    => $request->date_string ?? ($setup->date_string ?? now()->format('d F Y')),
-            'date_extra'     => $request->date_extra ?? ($setup->date_extra ?? ''),
-            'template'       => $request->template ?? ($setup->template ?? '1'),
+            'event_title'    => $request->filled('event_title') ? $request->event_title : ($setup->event_title ?? $event->event_title),
+            'event_subtitle' => $request->filled('event_subtitle') ? $request->event_subtitle : ($setup->event_subtitle ?? ''),
+            'speaker'        => $request->filled('speaker') ? $request->speaker : ($setup->speaker ?? 'Narasumber'),
+            'speaker_title'  => $request->has('speaker_title') ? ($request->speaker_title ?? '') : ($setup->speaker_title ?? ''),
+            'date_string'    => $request->filled('date_string') ? $request->date_string : ($setup->date_string ?? now()->format('d F Y')),
+            'date_extra'     => $request->has('date_extra') ? ($request->date_extra ?? '') : ($setup->date_extra ?? ''),
+            'template'       => $request->filled('template') ? $request->template : ($setup->template ?? '1'),
             'has_sign'       => $request->has('has_sign'),
         ];
 
@@ -396,11 +396,11 @@ class AdminRegistrationController extends Controller
         
         $data = [
             'event_title'    => $request->event_title,
-            'event_subtitle' => $request->event_subtitle,
+            'event_subtitle' => $request->event_subtitle ?? '',
             'speaker'        => $request->speaker,
-            'speaker_title'  => $request->speaker_title,
+            'speaker_title'  => $request->speaker_title ?? '',
             'date_string'    => $request->date_string,
-            'date_extra'     => $request->date_extra,
+            'date_extra'     => $request->date_extra ?? '',
             'template'       => $request->template,
             'has_sign'       => $request->has('has_sign'),
         ];
