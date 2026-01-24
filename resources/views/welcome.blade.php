@@ -23,7 +23,11 @@
                                 </p>
                                 <div class="flex flex-wrap justify-center lg:justify-start gap-3 mb-6">
                                     {{-- Tombol Daftar Sekarang --}}
-                                    <a href="{{ route('event.show', $events->where('status', 'open')->first()->event_code) }}"
+                                    @php
+                                        $LastEvent = $events->where('status', 'open')->first() 
+                                                    ?? $events->sortByDesc('date_start')->first();
+                                    @endphp
+                                    <a href="{{ route('event.show', $LastEvent->event_code) }}"
                                     class="inline-flex items-center px-6 py-3 bg-secondary text-white text-sm font-bold rounded-xl shadow-lg hover:bg-orange-600 transition">
                                         Daftar Sekarang 
                                         <i class="fas fa-chevron-right ml-2 text-xs"></i>
