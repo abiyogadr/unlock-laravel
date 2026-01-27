@@ -5,7 +5,7 @@
 @section('content')
 
     <!-- 1. Hero Section (Compact Slider) -->
-    <section class="w-full bg-gradient-to-br from-primary to-purple-800 text-white py-12 md:py-8">
+    <section class="w-full bg-gradient-to-br from-primary to-purple-800 text-white py-12 md:py-18">
         <div class="container mx-auto px-4 max-w-7xl">
             <div class="swiper heroSwiper overflow-hidden">
                 <div class="swiper-wrapper">
@@ -15,10 +15,10 @@
                     <div class="swiper-slide">
                         <div class="flex flex-col lg:flex-row items-center gap-2">
                             <div class="lg:w-7/12 text-center lg:text-left">
-                                <h1 class="text-lg md:text-3xl font-bold mb-10 opacity-90 leading-relaxed">
-                                    Unlock.co.id menghadirkan webinar dan pelatihan online terbaik dengan praktisi industri.
+                                <h1 class="text-lg md:text-3xl font-bold mb-4 md:mb-10 opacity-90 leading-relaxed">
+                                    Unlock.co.id menghadirkan webinar dan E-Course terbaik dengan praktisi industri.
                                 </h1>
-                                <p class="text-base md:text-lg font-light mb-6 opacity-90 line-clamp-2">
+                                <p class="text-base md:text-lg font-light mb-6 opacity-90">
                                     Daftarkan dirimu segera di webinar terbaru kami dan tingkatkan skill profesionalmu bersama mentor berpengalaman.
                                 </p>
                                 <div class="flex flex-wrap justify-center lg:justify-start gap-3 mb-6">
@@ -41,16 +41,16 @@
                                     </a>
                                 </div>
                             </div>
-                            <div class="lg:w-4/12 w-full relative">
+                            <div class="lg:w-5/12 w-full relative">
                                 @if($latestEvent)
-                                    <div class="relative group">
+                                    <a href="{{ route('event.show', $latestEvent->event_code) }}" class="relative group">
                                         {{-- Decorative background elements --}}
                                         <div class="absolute -inset-1 bg-gradient-to-r from-secondary to-purple-500 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
                                         
                                         <div class="relative bg-white/5 backdrop-blur-xl p-3 rounded-[2rem] border border-white/20 shadow-2xl">
-                                            <div class="aspect-video lg:aspect-square overflow-hidden rounded-[1.5rem] relative">
-                                                <div class="absolute hidden sm:block top-3 right-3 flex justify-center px-2.5 py-2 text-[11px] font-semibold rounded-full bg-secondary/90">
-                                                    <p class="text-white font-bold text-sm">Event Baru</p>
+                                            <div class="aspect-video overflow-hidden rounded-[1.5rem] relative">
+                                                <div class="absolute hidden sm:block top-3 right-3 flex justify-center px-2 py-2 text-xs font-semibold rounded-full bg-secondary/90">
+                                                    <p class="text-white font-bold">Event Baru</p>
                                                 </div>
                                                 @if($latestEvent->kv_path)
                                                     <img src="{{ asset('storage/'.$latestEvent->kv_path) }}" 
@@ -63,14 +63,14 @@
                                                 @endif
 
                                                 {{-- Informasi Singkat di Atas Gambar --}}
-                                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
-                                                    <h3 class="text-xl font-bold text-white line-clamp-2">
+                                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4">
+                                                    <h3 class="text-md md:text-xl font-bold text-white line-clamp-2">
                                                         {{ $latestEvent->event_title }}
                                                     </h3>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </a>
                                 @else
                                     {{-- Placeholder jika tidak ada event --}}
                                     <div class="relative bg-white/5 border border-white/20 rounded-[2rem] p-12 text-center backdrop-blur-sm">
@@ -116,7 +116,7 @@
     </section>
 
     <!-- 2. Open Events Section (Full Width Background Gray) -->
-    <section class="w-full py-16 bg-gray-50">
+    <section class="w-full py-8 md:py-16 bg-gray-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
             <h2 class="text-3xl font-bold text-center text-gray-800 mb-4">
                 Event yang Sedang Dibuka
@@ -134,11 +134,11 @@
                                 overflow-hidden flex flex-col">
 
                             {{-- KV --}}
-                            <div class="relative h-44 bg-gray-100 overflow-hidden">
+                            <div class="relative bg-gray-100 overflow-hidden">
                                 @if($event->kv_path)
                                     <img src="{{ asset('storage/'.$event->kv_path) }}"
                                         alt="{{ $event->event_title }}"
-                                        class="w-full h-full object-cover transition-transform duration-500
+                                        class="aspect-video object-cover transition-transform duration-500
                                                 group-hover:scale-105">
                                 @else
                                     <div class="w-full h-full flex flex-col items-center justify-center
@@ -149,7 +149,7 @@
                                 @endif
 
                                 {{-- Status badge on image --}}
-                                <span class="absolute top-3 left-3 px-2.5 py-1 text-[11px] font-semibold rounded-full
+                                <span class="absolute top-3 right-3 px-2 py-1 text-3xs font-semibold rounded-full
                                             {{ $event->status === 'open'
                                                 ? 'bg-green-500/90 text-white'
                                                 : 'bg-gray-500/90 text-white' }}">
@@ -206,13 +206,13 @@
     </section>
 
     <!-- 3. Features Section (Full Width Background White) -->
-    <section class="w-full py-16 bg-white">
+    <section class="w-full py-8 md:py-16 bg-white">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-6 md:mb-12">
                 Mengapa Memilih Unlock Indonesia?
             </h2>
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="text-center p-6 rounded-xl hover:shadow-lg transition duration-300 bg-white">
+            <div class="grid md:grid-cols-3 gap-4 md:gap-8">
+                <div class="text-center p-3 md:p-6 rounded-xl hover:shadow-lg transition duration-300 bg-white">
                     <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-video text-2xl text-primary"></i>
                     </div>
@@ -237,7 +237,7 @@
         </div>
     </section>
         <!-- Section: Topik Profesional & Relevansi Industri -->
-    <section class="w-full py-16 bg-gray-50">
+    <section class="w-full py-8 md:py-16 bg-gray-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
             <div class="text-center mb-12">
                 <h2 class="text-3xl font-bold text-gray-800 mb-4">
@@ -306,7 +306,7 @@
         </div>
     </section>
 
-    <section class="w-full py-16 bg-white">
+    <section class="w-full py-8 md:py-16 bg-white">
         <div class="container mx-auto text-center px-4 sm:px-6 lg:px-8 max-w-7xl">
             <h2 class="text-3xl font-bold text-gray-800 mb-8">
                 Hubungi Kami

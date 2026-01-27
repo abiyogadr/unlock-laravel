@@ -4,7 +4,7 @@
 
 @section('content')
 {{-- Hero Section with KV --}}
-<section class="relative bg-gradient-to-br from-primary to-purple-900 text-white py-20 md:py-24 px-4 overflow-hidden">
+<section class="relative bg-gradient-to-br from-primary to-purple-900 text-white py-8 md:py-16 px-4 overflow-hidden">
     <div class="absolute inset-0">
         @if($event->kv_image)
             <img src="{{ asset('storage/'.$event->kv_image) }}" 
@@ -54,31 +54,26 @@
 </section>
 
 {{-- Main Content --}}
-<section class="py-16 px-4 bg-gray-50">
+<section class="py-8 md:py-16 px-4 bg-gray-50">
     <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-10">
             
             {{-- KV CARD --}}
-            <div class="mb-10">
-                <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                    <i class="fas fa-image text-primary mr-3"></i>
-                    Key Visual Event
-                </h2>
-
+            <div class="mb-4 md:mb-10">
                 <div class="bg-gray-50 border border-gray-100 rounded-2xl p-3">
                     @if($event->kv_path)
                         <a href="{{ asset('storage/'.$event->kv_path) }}"
                         target="_blank"
-                        class="block overflow-hidden rounded-xl group">
-                            <div class="flex items-center justify-center min-h-[300px] md:min-h-[400px] bg-gray-100">
+                        class="block overflow-hidden rounded-xl group bg-gray-100">
+                            <div class="flex items-center justify-center w-full">
                                 <img src="{{ asset('storage/'.$event->kv_path) }}"
                                     alt="{{ $event->event_title }}"
-                                    class="max-w-full max-h-[300px] md:max-h-[400px] w-auto h-auto
-                                            transition-transform duration-500 group-hover:scale-[1.02]">
+                                    class="w-full h-auto max-h-[450px] md:max-h-[600px] object-contain 
+                                            transition-transform duration-500 group-hover:scale-[1.01]">
                             </div>
                         </a>
-                        <p class="mt-2 text-[11px] text-gray-500 text-right">
-                            Klik gambar untuk lihat versi penuh
+                        <p class="mt-2 text-[11px] text-gray-500 text-right italic">
+                            Klik gambar untuk memperbesar
                         </p>
                     @else
                         <div class="h-56 md:h-64 flex flex-col items-center justify-center
@@ -93,37 +88,35 @@
             </div>
 
             {{-- Speakers Section --}}
-            <div class="mb-10">
-                <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                    <i class="fas fa-microphone text-primary mr-3"></i>
-                    Speaker
-                </h2>
-                <div class="grid md:grid-cols-2 gap-4">
-                    @foreach($event->speakers as $speaker)
-                        <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                            <div class="w-12 h-12 bg-gradient-to-br from-primary to-purple-700 rounded-full flex-shrink-0 flex items-center justify-center text-white font-semibold shadow-md">
-                                {{ substr($speaker->speaker_name, 0, 1) }}
+            <div class="mb-4 md:mb-10">
+                <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                    <h3 class="text-sm font-semibold text-gray-600 mb-4 flex items-center">
+                        <i class="fas fa-microphone mr-2 text-primary"></i>
+                        Speaker
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 space-y-2">
+                        @foreach($event->speakers as $speaker)
+                            <div class="border-b border-gray-200 md:pb-2 last:border-b-0">
+                                <div class="flex items-center mb-1 md:mb-2">
+                                    <i class="fas fa-user-circle text-primary text-lg mr-3"></i>
+                                    <h4 class="font-semibold text-gray-800 text-sm md:text-base">
+                                        {{ $speaker->speaker_name }}
+                                    </h4>
+                                </div>
+                                @if($speaker->position)
+                                    <p class="text-2xs md:text-xs text-gray-600 mb-1 ml-7">
+                                        <i class="fas fa-briefcase mr-1 text-gray-400"></i>
+                                        {{ $speaker->position }} @if($speaker->company) at {{ $speaker->company }} @endif
+                                    </p>
+                                @endif
                             </div>
-                            
-                            <div>
-                                <p class="font-semibold text-gray-800" title="{{ $speaker->prefix_title }} {{ $speaker->speaker_name }}{{ $speaker->suffix_title ? ', ' . $speaker->suffix_title : '' }}">
-                                    @php
-                                        $fullName = ($speaker->prefix_title ? $speaker->prefix_title . ' ' : '') . 
-                                                $speaker->speaker_name . 
-                                                ($speaker->suffix_title ? ', ' . $speaker->suffix_title : '');
-                                    @endphp
-                                    
-                                    {{ Str::limit($fullName, 30, '...') }}
-                                </p>
-                                <p class="text-xs text-gray-500">Pembicara Profesional</p>
-                            </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
             </div>
 
             {{-- Event Details --}}
-            <div class="grid md:grid-cols-2 gap-8 mb-10">
+            <div class="grid md:grid-cols-2 gap-4 md:gap-8 mb-4 md:mb-10">
                 {{-- Date & Time --}}
                 <div class="bg-gray-50 rounded-xl p-5">
                     <h3 class="text-sm font-semibold text-gray-600 mb-3 flex items-center">
@@ -188,7 +181,7 @@
             @endif
 
             {{-- Registration CTA --}}
-            <div class="text-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-100">
+            <div class="text-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 md:p-8 border border-gray-100">
                 <h3 class="text-lg font-bold text-gray-800 mb-2">
                     Siap untuk mengembangkan skill?
                 </h3>
