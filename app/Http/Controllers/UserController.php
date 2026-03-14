@@ -99,6 +99,9 @@ class UserController extends Controller
             $validated['birth_place'] = trim(explode('-', $validated['birth_place'])[0]);
         }
 
+        // Convert username to lowercase
+        $validated['username'] = strtolower($validated['username']);
+
         // Handle upload avatar
         if ($request->hasFile('avatar')) {
             // Hapus avatar lama jika ada

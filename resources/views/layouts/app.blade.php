@@ -7,21 +7,20 @@
     <meta name="description" content="@yield('meta_description', 'Unlock Indonesia: Platform Webinar Bersertifikat. Tingkatkan skill profesional Anda bersama praktisi industri terbaik. Daftar sekarang untuk akses materi eksklusif dan e-sertifikat nasional!')">
     <title>@yield('title', 'Unlock - Webinar Event')</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script> -->
     
     <!-- Vite + Tailwind CSS v4 -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @stack('styles') 
+    <!-- @stack('styles')  -->
 
 </head>
 <!-- <body class="font-[var(--font-poppins)] bg-gray-50 text-gray-800 leading-relaxed "> -->
-<body class="font-[var(--font-poppins)] bg-gray-50 text-gray-800 leading-relaxed min-h-screen flex flex-col">
+<body class="font-[var(--font-sans)] bg-gray-50 text-gray-800 leading-relaxed min-h-screen flex flex-col">
     <!-- Navbar -->
     <nav class="sticky top-0 z-50 bg-white shadow-sm w-full">
         <!-- Pembungkus konten navbar agar sejajar dengan isi web -->
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 {{ request()->is('upanel*') ? 'max-w-full' : 'max-w-7xl' }} py-2 flex justify-between items-center">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 {{ request()->is('upanel*') ? 'max-w-full' : 'max-w-7xl' }} py-4 flex justify-between items-center">
             
             <!-- LOGO -->
             <a href="{{ url('/') }}" class="inline-block">
@@ -117,7 +116,7 @@
         @yield('content')
     </main>
     
-    @if (auth()->check() && !request()->is('upanel*'))
+    @if (!request()->is('upanel*'))
     <footer class="bg-primary border-t border-gray-200 mt-auto">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-6">
             <!-- BAGIAN ATAS: GRID MENU -->
@@ -137,7 +136,7 @@
                 <div>
                     <h4 class="font-bold text-white mb-4">Produk</h4>
                     <ul class="space-y-2 text-sm text-white">
-                        <!-- <li><a href="#" class="hover:text-orange-300">Instant Meeting</a></li> -->
+                        <li><a href="{{ route('ecourse.catalog') }}" class="hover:text-orange-300">E-Course</a></li>
                         <li><a href="{{ route('event.index') }}" class="hover:text-orange-300">Event</a></li>
                         <li><a href="{{ route('certificate') }}" class="hover:text-orange-300">Sertifikat Saya</a></li>
                     </ul>

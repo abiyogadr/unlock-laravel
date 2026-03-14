@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Schema;
 use Midtrans\Config;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
+use App\Models\Ecourse\Course;
+use App\Models\Ecourse\CourseModule;
+use App\Models\Ecourse\CourseCategory;
 
 class AppServiceProvider extends ServiceProvider
 {

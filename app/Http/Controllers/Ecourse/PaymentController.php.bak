@@ -1,0 +1,150 @@
+<?php
+
+namespace App\Http\Controllers\Ecourse;
+
+use App\Http\Controllers\Controller;
+use App\Models\Ecourse\Course;
+use App\Models\Ecourse\CoursePackage;
+use App\Models\Ecourse\CourseTransaction;
+use App\Models\Ecourse\UserSubscription;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Midtrans\Config;
+use Midtrans\Snap;
+use Midtrans\Notification;
+
+class PaymentController extends Controller
+{
+    public function checkout(Request $request)
+    {
+        $user = Auth::user();
+
+        $data = $request->validate([
+            'type' => 'required|in:package,course',
+            'package_id' => 'required_if:type,package|nullable|integer',
+            'course_id' => 'required_if:type,course|nullable|integer',
+        ]);
+
+        $package = null;
+        $course = null;
+        $amount = 0;
+
+        if ($data['type'] === 'package') {
+            $package = CoursePackage::where('is_active', true)->findOrFail($data['package_id']);
+            $amount = (float) ($package->discount_price ?? $package->price);
+        } else {
+            $course = Course::published()->findOrFail($data['course_id']);
+            $amount = (float) ($course->price ?? 0);
+        }
+
+        // Use transaction ID instead of UUID to keep order_id short (Midtrans has 50 char limit)
+        $orderId = 'ECO-' . time() . '-' . rand(1000, 9999);
+
+        $transaction = CourseTransaction::create([
+            'user_id' => $user->id,
+            'package_id' => $package?->id,
+            'course_id' => $course?->id,
+            'amount' => $amount,
+            'status' => 'pending',
+            'external_reference' => $orderId,
+            'meta' => [
+                'type' => $data['type'],
+            ],
+        ]);
+
+        $this->configureMidtrans();
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => $amount,
+            ],
+            'customer_details' => [
+                'first_name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+            ],
+            'item_details' => [
+                [
+                    'id' => $data['type'] === 'package' ? 'package-' . $package->id : 'course-' . $course->id,
+                    'price' => $amount,
+                    'quantity' => 1,
+                    'name' => $data['type'] === 'package' ? $package->name : $course->title,
+                ],
+            ],
+        ];
+
+        $snap = Snap::createTransaction($params);
+
+        return response()->json([
+            'data' => [
+                'snap_token' => $snap->token ?? null,
+                'redirect_url' => $snap->redirect_url ?? null,
+                'order_id' => $orderId,
+            ],
+        ]);
+    }
+
+    public function callback(Request $request)
+    {
+        $this->configureMidtrans();
+
+        $notif = new Notification();
+
+        $orderId = $notif->order_id;
+        $transactionStatus = $notif->transaction_status;
+        $fraudStatus = $notif->fraud_status ?? null;
+
+        $transaction = CourseTransaction::where('external_reference', $orderId)->first();
+        if (!$transaction) {
+            return response()->json(['message' => 'Transaction not found'], 404);
+        }
+
+        $status = match (true) {
+            ($transactionStatus === 'capture' && $fraudStatus === 'accept') => 'paid',
+            $transactionStatus === 'settlement' => 'paid',
+            $transactionStatus === 'pending' => 'pending',
+            default => 'failed',
+        };
+
+        $transaction->update([
+            'status' => $status,
+            'payment_method' => $notif->payment_type ?? null,
+            'meta' => array_merge($transaction->meta ?? [], [
+                'fraud_status' => $fraudStatus,
+                'transaction_status' => $transactionStatus,
+            ]),
+        ]);
+
+        if ($status === 'paid' && $transaction->package_id && !$transaction->user_subscription_id) {
+            $package = CoursePackage::find($transaction->package_id);
+            if ($package) {
+                $endDate = $package->duration_days ? now()->addDays($package->duration_days) : null;
+                $subscription = UserSubscription::create([
+                    'user_id' => $transaction->user_id,
+                    'package_id' => $package->id,
+                    'start_date' => now(),
+                    'end_date' => $endDate,
+                    'quota_total' => $package->course_quota,
+                    'quota_used' => 0,
+                    'status' => 'active',
+                ]);
+
+                $transaction->update([
+                    'user_subscription_id' => $subscription->id,
+                ]);
+            }
+        }
+
+        return response()->json(['message' => 'Callback processed']);
+    }
+
+    private function configureMidtrans(): void
+    {
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production');
+        Config::$isSanitized = config('midtrans.is_sanitized', true);
+        Config::$is3ds = config('midtrans.is_3ds', true);
+    }
+}

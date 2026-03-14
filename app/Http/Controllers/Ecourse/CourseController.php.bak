@@ -1,0 +1,160 @@
+<?php
+
+namespace App\Http\Controllers\Ecourse;
+
+use App\Http\Controllers\Controller;
+use App\Models\Ecourse\Course;
+use App\Models\Ecourse\CourseCategory;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+
+class CourseController extends Controller
+{
+    public function index(Request $request)
+    {
+        $filterCategories = CourseCategory::active()->get();
+        
+        // Inisialisasi null agar tidak error di view
+        $courses = null;
+        $categories = collect();
+
+        if ($request->anyFilled(['q', 'category', 'level', 'price_type'])) {
+            // Query untuk mode pencarian (flat grid)
+            $courses = Course::published()
+                ->with(['speaker', 'categories'])
+                ->when($request->q, function($q) use ($request) {
+                    $q->where('title', 'like', '%' . $request->q . '%');
+                })
+                ->when($request->category, function($q) use ($request) {
+                    $q->whereHas('categories', function($cat) use ($request) {
+                        $cat->where('slug', $request->category);
+                    });
+                })
+                ->when($request->level, function($q) use ($request) {
+                    $q->where('level', $request->level);
+                })
+                ->when($request->price_type, function($q) use ($request) {
+                    if ($request->price_type === 'free') {
+                        $q->where('is_free', true);
+                    } elseif ($request->price_type === 'paid') {
+                        $q->where('is_free', false);
+                    }
+                })
+                ->latest()->paginate(12)->withQueryString();
+        } else {
+            $categories = CourseCategory::active()
+                ->with(['courses' => fn($q) => $q->published()->limit(4)])
+                ->get();
+        }
+
+        return view('ecourse.catalog', compact('categories', 'filterCategories', 'courses'));
+    }
+
+    public function category(Request $request, CourseCategory $category)
+    {
+        $courses = $category->courses()
+            ->published()
+            ->with('speaker')
+            ->when($request->q, function($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->q . '%');
+            })
+            ->when($request->level, function($q) use ($request) {
+                $q->where('level', $request->level);
+            })
+            ->when($request->price_type, function($q) use ($request) {
+                if ($request->price_type === 'free') $q->where('is_free', true);
+                if ($request->price_type === 'paid') $q->where('is_free', false);
+            })
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('ecourse.catalog-category', compact('category', 'courses'));
+    }
+
+
+    public function show(Course $course)
+    {
+        // Load relasi terkait untuk efisiensi query
+        $course->load(['speaker', 'categories', 'modules']);
+
+        // Ambil progres user (jika login dan punya hubungan dengan course)
+        $userProgress = Auth::user()?->ecourses()
+            ->where('course_id', $course->id)
+            ->first()?->progress ?? 0;
+
+        // Dapatkan slug dari modul pertama, jika ada
+        $firstModuleSlug = $course->modules->first()?->slug;
+
+        // Kirim data ke view
+        return view('ecourse.show', compact('course', 'userProgress', 'firstModuleSlug'));
+    }
+
+    /**
+     * API Methods untuk Vue Frontend
+     */
+
+    public function getCoursesApi(Request $request)
+    {
+        $query = Course::published()
+            ->with(['speaker', 'categories', 'modules'])
+            ->when($request->q, function($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->q . '%');
+            })
+            ->when($request->category, function($q) use ($request) {
+                $q->whereHas('categories', function($cat) use ($request) {
+                    $cat->where('slug', $request->category);
+                });
+            })
+            ->when($request->level, function($q) use ($request) {
+                $q->where('level', $request->level);
+            })
+            ->when($request->price_type, function($q) use ($request) {
+                if ($request->price_type === 'free') {
+                    $q->where('is_free', true);
+                } elseif ($request->price_type === 'paid') {
+                    $q->where('is_free', false);
+                }
+            })
+            ->latest();
+
+        $courses = $query->get()->map(fn($course) => [
+            'id' => $course->id,
+            'title' => $course->title,
+            'slug' => $course->slug,
+            'description' => $course->description,
+            'thumbnail' => $course->thumbnail_path ? asset("storage/{$course->thumbnail_path}") : null,
+            'level' => $course->level,
+            'price' => $course->is_free ? 0 : ($course->price ?? 0),
+            'categories' => $course->categories,
+            'modules' => $course->modules,
+        ]);
+
+        return response()->json(['data' => $courses]);
+    }
+
+    public function getCategoriesApi()
+    {
+        $categories = CourseCategory::active()
+            ->with(['courses' => fn($q) => $q->published()->with('modules')->limit(4)])
+            ->get()
+            ->map(fn($cat) => [
+                'id' => $cat->id,
+                'slug' => $cat->slug,
+                'name' => $cat->name,
+                'courses' => $cat->courses->map(fn($course) => [
+                    'id' => $course->id,
+                    'title' => $course->title,
+                    'slug' => $course->slug,
+                    'description' => $course->description,
+                    'thumbnail' => $course->thumbnail_path ? asset("storage/{$course->thumbnail_path}") : null,
+                    'level' => $course->level,
+                    'price' => $course->is_free ? 0 : ($course->price ?? 0),
+                    'modules' => $course->modules,
+                ]),
+            ]);
+
+        return response()->json(['data' => $categories]);
+    }
+}
+

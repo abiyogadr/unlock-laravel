@@ -1,0 +1,786 @@
+<?php
+
+namespace App\Http\Controllers\Ecourse;
+
+use App\Http\Controllers\Controller;
+use App\Models\Ecourse\Course;
+use App\Models\Ecourse\CourseModule;
+use App\Models\Ecourse\CoursePackage;
+use App\Models\Ecourse\UserCourse;
+use App\Models\Ecourse\UserCourseModule;
+use App\Models\Ecourse\UserSubscription;
+use App\Models\Ecourse\CourseTransaction;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class EcourseController extends Controller
+{
+    public function dashboard()
+    {
+        $user = Auth::user();
+
+        $aggregates = $user->ecourses()
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN progress < 100 THEN 1 ELSE 0 END) as on_progress,
+                SUM(CASE WHEN progress = 100 THEN 1 ELSE 0 END) as completed
+            ')
+            ->first();
+
+        $stats = [
+            'total_owned'  => (int) ($aggregates->total ?? 0),
+            'ongoing'      => (int) ($aggregates->on_progress ?? 0),
+            'completed'    => (int) ($aggregates->completed ?? 0),
+            'certificates' => 0,
+        ];
+
+        $latestCourses = $user->ecourses()
+            ->with(['course.speaker', 'currentModule'])
+            ->latest('updated_at')
+            ->limit(6)
+            ->get();
+
+        return view('ecourse.dashboard', compact('stats', 'latestCourses'));
+    }
+
+    public function myJourney(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Get all user course categories
+        $filterCategories = $user->ecourses()
+            ->with('course.categories')
+            ->get()
+            ->pluck('course.categories')
+            ->flatten()
+            ->unique('id')
+            ->values();
+
+        // Inisialisasi null agar tidak error di view
+        $courses = null;
+        $categories = collect();
+
+        if ($request->anyFilled(['q', 'category', 'level', 'status'])) {
+            // Query untuk mode pencarian (flat grid)
+            $courses = $user->ecourses()
+                ->with(['course' => function($q) {
+                    $q->select('id', 'title', 'slug', 'thumbnail_path', 'level', 'speaker_id')
+                      ->with(['speaker', 'categories']);
+                }])
+                ->when($request->q, function($q) use ($request) {
+                    $q->whereHas('course', function($course) use ($request) {
+                        $course->where('title', 'like', '%' . $request->q . '%');
+                    });
+                })
+                ->when($request->category, function($q) use ($request) {
+                    $q->whereHas('course.categories', function($cat) use ($request) {
+                        $cat->where('slug', $request->category);
+                    });
+                })
+                ->when($request->level, function($q) use ($request) {
+                    $q->whereHas('course', function($course) use ($request) {
+                        $course->where('level', $request->level);
+                    });
+                })
+                ->when($request->status, function($q) use ($request) {
+                    if ($request->status === 'progress') {
+                        $q->where('progress', '<', 100);
+                    } elseif ($request->status === 'completed') {
+                        $q->where('progress', '>=', 100);
+                    }
+                })
+                ->orderBy('updated_at', 'desc')
+                ->paginate(12)
+                ->withQueryString();
+        } else {
+            // Mode default: courses per category
+            $categories = $filterCategories->map(function($category) use ($user) {
+                $category->userCourses = $user->ecourses()
+                    ->whereHas('course.categories', function($q) use ($category) {
+                        $q->where('category_id', $category->id);
+                    })
+                    ->with(['course' => function($q) {
+                        $q->select('id', 'title', 'slug', 'thumbnail_path', 'speaker_id', 'level')
+                          ->with(['speaker', 'categories']);
+                    }])
+                    ->orderBy('updated_at', 'desc')
+                    ->get();
+                return $category;
+            })->filter(fn($cat) => $cat->userCourses->count() > 0);
+        }
+
+        // Stats
+        $stats = [
+            'total' => $user->ecourses()->count(),
+            'in_progress' => $user->ecourses()->where('progress', '<', 100)->count(),
+            'completed' => $user->ecourses()->where('progress', '>=', 100)->count(),
+        ];
+
+        return view('ecourse.myjourney', compact('categories', 'filterCategories', 'courses', 'stats'));
+    }
+
+    /**
+     * Halaman player untuk menonton video modul
+     * 
+     * Alur:
+     * 1. Cek apakah user sudah enroll ke course
+     * 2. Jika belum dan course gratis, auto-enroll
+     * 3. Jika sudah, update current_module_id
+     * 4. Tampilkan video player dengan modul content
+     */
+    public function player(Course $course, CourseModule $module)
+    {
+        $user = Auth::user();
+        
+        // Validasi: modul harus bagian dari course ini
+        if ($module->course_id !== $course->id) {
+            return redirect()->route('ecourse.show', $course->slug)
+                ->with('error', 'Modul tidak ditemukan dalam course ini.');
+        }
+        
+        // Cek apakah user sudah enroll
+        $userCourse = $user->ecourses()
+            ->where('course_id', $course->id)
+            ->first();
+
+        if (!$userCourse) {
+            if ($course->is_free) {
+                // Auto-enroll untuk course gratis
+                $userCourse = UserCourse::create([
+                    'user_id' => $user->id,
+                    'course_id' => $course->id,
+                    'current_module_id' => $module->id,
+                    'enrolled_at' => now(),
+                    'started_at' => now(),
+                    'status' => 'in_progress',
+                    'progress' => 0,
+                    'completed_modules' => 0,
+                    'total_modules' => $course->modules->count(),
+                ]);
+            } else {
+                return redirect()->route('ecourse.show', $course->slug)
+                    ->with('error', 'Kelas ini berbayar. Silakan lakukan pembayaran terlebih dahulu.');
+            }
+        } else {
+            // Update current_module_id dan status
+            $userCourse->update([
+                'current_module_id' => $module->id,
+                'status' => 'in_progress',
+                'started_at' => $userCourse->started_at ?? now(),
+            ]);
+        }
+
+        // ✅ CREATE record di user_course_modules saat user mulai modul
+        UserCourseModule::firstOrCreate(
+            [
+                'user_course_id' => $userCourse->id,
+                'course_module_id' => $module->id
+            ],
+            [
+                'started_at' => now(),
+                'progress' => 0,
+                'is_completed' => false,
+            ]
+        );
+
+        // Load data yang diperlukan
+        $course->load(['speaker', 'categories', 'modules']);
+        $module->load('materials');
+
+        // Ambil modul-modul dalam course untuk sidebar dengan status completion
+        $modules = $course->modules()
+            ->orderBy('order_num')
+            ->get()
+            ->map(function($mod) use ($userCourse) {
+                $userCourseModule = UserCourseModule::where('user_course_id', $userCourse->id)
+                    ->where('course_module_id', $mod->id)
+                    ->first();
+                
+                return [
+                    'module' => $mod,
+                    'progress' => $userCourseModule?->progress ?? 0,
+                    'is_completed' => $userCourseModule?->is_completed ?? false,
+                    'started_at' => $userCourseModule?->started_at,
+                ];
+            });
+        
+        // Ambil current module progress untuk resume playback
+        $currentModuleProgress = UserCourseModule::where('user_course_id', $userCourse->id)
+            ->where('course_module_id', $module->id)
+            ->first();
+        
+        $resumeProgress = $currentModuleProgress?->progress ?? 0;
+        $isModuleCompleted = $currentModuleProgress?->is_completed ?? false;
+        
+        // Hitung resume time untuk video lokal (convert percentage to seconds)
+        $videoDuration = $module->video_duration ?? 0; // Pastikan ada di model/migration
+        $resumeSeconds = ($resumeProgress / 100) * $videoDuration;
+        
+        // Cek modul berikutnya
+        $currentModuleOrder = $module->order_num;
+        $nextModule = $course->modules()
+            ->where('order_num', '>', $currentModuleOrder)
+            ->orderBy('order_num')
+            ->first();
+
+        return view('ecourse.player', compact('course', 'module', 'userCourse', 'modules', 'nextModule', 'resumeProgress', 'resumeSeconds', 'isModuleCompleted'));
+    }
+
+    /**
+     * Mark modul sebagai selesai / completed
+     * Otomatis move ke modul berikutnya
+     */
+    public function completeModule(CourseModule $module, Request $request)
+    {
+        $user = Auth::user();
+        
+        $userCourse = $user->ecourses()
+            ->where('course_id', $module->course_id)
+            ->firstOrFail();
+
+        // Update ke modul yang selesai
+        UserCourseModule::firstOrCreate(
+            [
+                'user_course_id' => $userCourse->id,
+                'course_module_id' => $module->id
+            ],
+            [
+                'started_at' => now(),
+                'progress' => 100,
+                'is_completed' => true,
+                'completed_at' => now(),
+            ]
+        )->update([
+            'progress' => 100,
+            'is_completed' => true,
+            'completed_at' => now(),
+        ]);
+
+        // Update overall course progress
+        $this->updateCourseProgress($userCourse);
+
+        // Cari modul berikutnya
+        $nextModule = $module->course->modules()
+            ->where('order_num', '>', $module->order_num)
+            ->orderBy('order_num')
+            ->first();
+
+        if ($nextModule) {
+            // Update current_module_id ke modul berikutnya
+            $userCourse->update(['current_module_id' => $nextModule->id]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Modul selesai! Lanjut ke modul berikutnya.',
+                'next_module_url' => route('ecourse.player', [$module->course->slug, $nextModule->slug])
+            ]);
+        } else {
+            // Course selesai
+            $userCourse->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Selamat! Kamu telah menyelesaikan course ini.',
+                'is_completed' => true
+            ]);
+        }
+    }
+
+    /**
+     * Update progress dalam modul (tracking waktu, video progress, dll)
+     */
+    public function updateProgress(CourseModule $module, Request $request)
+    {
+        $request->validate([
+            'progress_percentage' => 'required|numeric|min:0|max:100'
+        ]);
+
+        $user = Auth::user();
+        
+        $userCourse = $user->ecourses()
+            ->where('course_id', $module->course_id)
+            ->firstOrFail();
+
+        // Update atau create module progress tracking
+        UserCourseModule::firstOrCreate(
+            [
+                'user_course_id' => $userCourse->id,
+                'course_module_id' => $module->id
+            ],
+            [
+                'started_at' => now(),
+                'progress' => 0
+            ]
+        )->update([
+            'progress' => max(
+                UserCourseModule::where('user_course_id', $userCourse->id)
+                    ->where('course_module_id', $module->id)
+                    ->value('progress') ?? 0,
+                $request->progress_percentage
+            )
+        ]);
+
+        // Update module_progress di user_course untuk tracking modul saat ini
+        $userCourse->update([
+            'module_progress' => $request->progress_percentage
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Hitung ulang overall progress course
+     */
+    private function updateCourseProgress(UserCourse $userCourse)
+    {
+        $totalModules = $userCourse->course->modules()->count();
+        $completedModules = $userCourse->userCourseModules()
+            ->where('is_completed', true)
+            ->count();
+
+        // Progress berdasarkan modul yang sudah selesai
+        $progress = $totalModules > 0 ? ($completedModules / $totalModules) * 100 : 0;
+
+        $userCourse->update([
+            'completed_modules' => $completedModules,
+            'total_modules' => $totalModules,
+            'progress' => round($progress, 2),
+            'status' => $progress >= 100 ? 'completed' : 'in_progress'
+        ]);
+    }
+
+    public function certificates()
+    {
+        $user = Auth::user();
+        $certificates = $user->ecourses()
+            ->where('status', 'completed')
+            ->with(['course', 'course.speaker'])
+            ->get();
+
+        return view('ecourse.certificates', compact('certificates'));
+    }
+
+    /**
+     * API untuk mendapatkan 3 ecourse terakhir yang belum tuntas
+     */
+    public function getRecentIncomplete()
+    {
+        $user = Auth::user();
+        
+        $recentCourses = $user->ecourses()
+            ->where('progress', '<', 100)
+            ->with(['course' => function ($query) {
+                $query->select('id', 'title', 'slug', 'thumbnail_path');
+            }])
+            ->orderBy('updated_at', 'desc')
+            ->limit(3)
+            ->get()
+            ->map(function ($userCourse) {
+                return [
+                    'id' => $userCourse->id,
+                    'title' => $userCourse->course->title,
+                    'slug' => $userCourse->course->slug,
+                    'thumbnail' => $userCourse->course->thumbnail_path,
+                    'progress' => (int) $userCourse->progress,
+                    'url' => route('ecourse.show', $userCourse->course->slug),
+                ];
+            })
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'data' => $recentCourses,
+            'count' => count($recentCourses),
+        ]);
+    }
+
+    /**
+     * API Methods untuk Vue Frontend
+     */
+
+    public function getDashboardStats()
+    {
+        $user = Auth::user();
+
+        $aggregates = $user->ecourses()
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN progress < 100 THEN 1 ELSE 0 END) as on_progress,
+                SUM(CASE WHEN progress = 100 THEN 1 ELSE 0 END) as completed
+            ')
+            ->first();
+
+        $certificates = \App\Models\Certificate::where('user_id', $user->id)->count();
+
+        return response()->json([
+            'data' => [
+                'total_owned' => (int) ($aggregates->total ?? 0),
+                'in_progress' => (int) ($aggregates->on_progress ?? 0),
+                'completed' => (int) ($aggregates->completed ?? 0),
+                'certificates' => $certificates,
+            ]
+        ]);
+    }
+
+    public function getPlayerData($courseSlug, $moduleSlug)
+    {
+        $user = Auth::user();
+        $course = Course::where('slug', $courseSlug)->firstOrFail();
+        $module = CourseModule::where('slug', $moduleSlug)
+            ->where('course_id', $course->id)
+            ->with('materials')
+            ->firstOrFail();
+
+        $userCourse = $user->ecourses()->where('course_id', $course->id)->first();
+
+        if (!$userCourse) {
+            $subscription = $user->activeSubscription();
+            $creditCost = (int) ($course->credit_cost ?? 1);
+            $acquisitionType = $course->is_free ? 'free' : 'direct';
+            $subscriptionId = null;
+
+            if ($subscription && $subscription->quota_remaining >= $creditCost) {
+                $subscriptionId = $subscription->id;
+                $acquisitionType = 'subscription';
+                $subscription->increment('quota_used', $creditCost);
+            }
+
+            $accessExpiresAt = null;
+            if (!empty($course->access_duration_days)) {
+                $accessExpiresAt = now()->addDays($course->access_duration_days);
+            } elseif ($subscription && $subscription->end_date) {
+                $accessExpiresAt = $subscription->end_date;
+            }
+
+            $userCourse = $user->ecourses()->create([
+                'course_id' => $course->id,
+                'subscription_id' => $subscriptionId,
+                'current_module_id' => $module->id,
+                'enrolled_at' => now(),
+                'started_at' => now(),
+                'completed_at' => null,
+                'access_expires_at' => $accessExpiresAt,
+                'acquisition_type' => $acquisitionType,
+                'credit_cost' => $creditCost,
+                'progress' => 0,
+                'completed_modules' => 0,
+                'total_modules' => $course->modules()->count(),
+                'status' => 'in_progress',
+            ]);
+        }
+
+        $userModule = $userCourse
+            ? $userCourse->userCourseModules()->firstOrCreate(
+                ['course_module_id' => $module->id],
+                [
+                    'progress' => 0,
+                    'started_at' => now(),
+                    'is_completed' => false,
+                ]
+            )
+            : null;
+
+        $modules = $course->modules()->orderBy('order_num')->get();
+        $progress = $userCourse ? $userCourse->progress : 0;
+        $isCompleted = $userModule ? $userModule->is_completed : false;
+        $completedModules = $userCourse?->completed_modules ?? 0;
+        $totalModules = $modules->count();
+
+        $moduleProgressMap = $userCourse
+            ? $userCourse->userCourseModules()->get()->keyBy('course_module_id')
+            : collect();
+
+        $subscription = $userCourse?->subscription;
+
+        return response()->json([
+            'data' => [
+                'course' => [
+                    'id' => $course->id,
+                    'title' => $course->title,
+                    'slug' => $course->slug,
+                    'description' => $course->description,
+                    'credit_cost' => (int) ($course->credit_cost ?? 1),
+                ],
+                'module' => [
+                    'id' => $module->id,
+                    'title' => $module->title,
+                    'slug' => $module->slug,
+                    'description' => $module->description,
+                    'video_path' => $module->video_path,
+                    'order_num' => $module->order_num,
+                    'objectives' => $module->objectives,
+                    'materials' => $module->materials,
+                ],
+                'modules' => $modules->map(function ($m) use ($moduleProgressMap) {
+                    $ucm = $moduleProgressMap[$m->id] ?? null;
+                    return [
+                        'id' => $m->id,
+                        'title' => $m->title,
+                        'slug' => $m->slug,
+                        'order_num' => $m->order_num,
+                        'formatted_duration' => $m->formatted_duration ?? null,
+                        'progress' => (float) ($ucm?->progress ?? 0),
+                        'is_completed' => (bool) ($ucm?->is_completed ?? false),
+                    ];
+                }),
+                'progress' => (float) $progress,
+                'completed_modules' => (int) $completedModules,
+                'total_modules' => (int) $totalModules,
+                'is_completed' => (bool) $isCompleted,
+                'subscription' => $subscription ? [
+                    'id' => $subscription->id,
+                    'status' => $subscription->status,
+                    'quota_remaining' => $subscription->quota_remaining,
+                    'quota_total' => (int) $subscription->quota_total,
+                    'ends_at' => $subscription->end_date,
+                ] : null,
+                'access_expires_at' => $userCourse?->access_expires_at,
+            ]
+        ]);
+    }
+
+    public function getCourseSummary(Course $course)
+    {
+        $user = Auth::user();
+        $course->load(['speaker', 'categories', 'modules']);
+
+        $userCourse = $user?->ecourses()->where('course_id', $course->id)->first();
+        $progress = $userCourse?->progress ?? 0;
+        $subscription = $user?->activeSubscription();
+
+        // Ambil progres per modul dari relasi user_course_modules untuk menandai modul yang sudah selesai
+        $moduleProgressMap = $userCourse
+            ? $userCourse->userCourseModules()->get()->keyBy('course_module_id')
+            : collect();
+
+        $firstModule = $userCourse ? CourseModule::where('id', $userCourse->current_module_id)
+                        ->where('course_id', $course->id)
+                        ->first() : $course->modules->sortBy('order_num')->first();
+
+        return response()->json([
+            'data' => [
+                'course' => [
+                    'id' => $course->id,
+                    'title' => $course->title,
+                    'slug' => $course->slug,
+                    'description' => $course->description,
+                    'short_description' => $course->short_description ?? null,
+                    'level' => $course->level,
+                    'is_free' => (bool) $course->is_free,
+                    'price' => $course->is_free ? 0 : ($course->price ?? 0),
+                    'credit_cost' => (int) ($course->credit_cost ?? 1),
+                    'access_duration_days' => $course->access_duration_days,
+                    'thumbnail' => $course->thumbnail_path ? asset("storage/{$course->thumbnail_path}") : null,
+                    'objectives' => $course->objectives ?? [],
+                    'categories' => $course->categories->map(fn($cat) => [
+                        'id' => $cat->id,
+                        'slug' => $cat->slug,
+                        'name' => $cat->name,
+                    ]),
+                    'speaker' => $course->speaker ? [
+                        'name' => trim(($course->speaker->prefix_title ? $course->speaker->prefix_title.' ' : '') . $course->speaker->speaker_name . ($course->speaker->suffix_title ? ' '.$course->speaker->suffix_title : '')),
+                        'job' => $course->speaker->job ?? 'Pembicara Profesional',
+                    ] : null,
+                ],
+                'modules' => $course->modules->sortBy('order_num')->values()->map(fn($m) => [
+                    'id' => $m->id,
+                    'title' => $m->title,
+                    'slug' => $m->slug,
+                    'order_num' => $m->order_num,
+                    'formatted_duration' => $m->formatted_duration ?? null,
+                    'progress' => (float) ($moduleProgressMap->get($m->id)?->progress ?? 0),
+                    'is_completed' => (bool) ($moduleProgressMap->get($m->id)?->is_completed ?? false),
+                ]),
+                'stats' => [
+                    'module_count' => $course->modules->count(),
+                    'formatted_duration' => $course->formatted_duration ?? null,
+                ],
+                'user' => [
+                    'progress' => (float) $progress,
+                    'completed_modules' => (int) ($userCourse?->completed_modules ?? 0),
+                    'total_modules' => (int) $course->modules->count(),
+                    'subscription' => $subscription ? [
+                        'id' => $subscription->id,
+                        'status' => $subscription->status,
+                        'quota_remaining' => $subscription->quota_remaining,
+                        'quota_total' => (int) $subscription->quota_total,
+                        'ends_at' => $subscription->end_date,
+                    ] : null,
+                ],
+                'first_module_slug' => $firstModule?->slug,
+            ]
+        ]);
+    }
+
+    public function listPackages()
+    {
+        $packages = CoursePackage::where('is_active', true)
+            ->orderBy('price')
+            ->get();
+
+        return response()->json([
+            'data' => $packages->map(fn($pkg) => [
+                'id' => $pkg->id,
+                'name' => $pkg->name,
+                'price' => (float) $pkg->price,
+                'discount_price' => $pkg->discount_price !== null ? (float) $pkg->discount_price : null,
+                'course_quota' => (int) $pkg->course_quota,
+                'duration_days' => $pkg->duration_days,
+            ]),
+        ]);
+    }
+
+    public function getMyJourneyApi(Request $request)
+    {
+        $user = Auth::user();
+        
+        $userCourses = $user->ecourses()
+            ->whereHas('course')
+            ->with(['course' => function($q) {
+                $q->with('categories', 'modules');
+            }])
+            ->when($request->q, function($q) use ($request) {
+                $q->whereHas('course', function($course) use ($request) {
+                    $course->where('title', 'like', '%' . $request->q . '%');
+                });
+            })
+            ->when($request->category, function($q) use ($request) {
+                $q->whereHas('course.categories', function($cat) use ($request) {
+                    $cat->where('slug', $request->category);
+                });
+            })
+            ->when($request->level, function($q) use ($request) {
+                $q->whereHas('course', function($course) use ($request) {
+                    $course->where('level', $request->level);
+                });
+            })
+            ->when($request->status, function($q) use ($request) {
+                if ($request->status === 'progress') {
+                    $q->where('progress', '<', 100);
+                } elseif ($request->status === 'completed') {
+                    $q->where('progress', '=', 100);
+                }
+            })
+            ->get();
+
+        $categories = $user->ecourses()
+            ->with('course.categories')
+            ->get()
+            ->pluck('course.categories')
+            ->flatten()
+            ->unique('id')
+            ->values();
+
+        return response()->json([
+            'data' => [
+                'userCourses' => $userCourses->map(fn($uc) => [
+                    'id' => $uc->id,
+                    'course' => [
+                        'id' => $uc->course->id,
+                        'title' => $uc->course->title,
+                        'slug' => $uc->course->slug,
+                        'description' => $uc->course->description,
+                        'level' => $uc->course->level,
+                        'price' => $uc->course->is_free ? 0 : ($uc->course->price ?? 0),
+                        'thumbnail' => $uc->course->thumbnail_path ? asset("storage/{$uc->course->thumbnail_path}") : null,
+                        'categories' => $uc->course->categories,
+                        'modules' => $uc->course->modules,
+                    ],
+                    'progress' => (float) $uc->progress,
+                ]),
+                'categories' => $categories->map(fn($cat) => [
+                    'id' => $cat->id,
+                    'slug' => $cat->slug,
+                    'name' => $cat->name,
+                    'userCourses' => $user->ecourses()
+                        ->whereHas('course.categories', function($q) use ($cat) {
+                            $q->where('category_id', $cat->id);
+                        })
+                        ->with('course.categories', 'course.modules')
+                        ->get()
+                        ->map(fn($uc) => [
+                            'id' => $uc->id,
+                            'course' => [
+                                'id' => $uc->course->id,
+                                'title' => $uc->course->title,
+                                'slug' => $uc->course->slug,
+                                'description' => $uc->course->description,
+                                'level' => $uc->course->level,
+                                'price' => $uc->course->is_free ? 0 : ($uc->course->price ?? 0),
+                                'thumbnail' => $uc->course->thumbnail_path ? asset("storage/{$uc->course->thumbnail_path}") : null,
+                                'categories' => $uc->course->categories,
+                                'modules' => $uc->course->modules,
+                            ],
+                            'progress' => (float) $uc->progress,
+                        ])
+                ]),
+            ]
+        ]);
+    }
+
+    public function getCertificatesApi()
+    {
+        $user = Auth::user();
+        
+        $certificates = \App\Models\Certificate::where('user_id', $user->id)
+            ->with('course')
+            ->get();
+
+        return response()->json([
+            'data' => [
+                'certificates' => $certificates->map(fn($cert) => [
+                    'id' => $cert->id,
+                    'certificate_number' => $cert->id,
+                    'course_title' => $cert->course->title,
+                    'completed_at' => $cert->created_at,
+                ])
+            ]
+        ]);
+    }
+
+    public function getUserCourses()
+    {
+        $user = Auth::user();
+        
+        $courses = $user->ecourses()
+            ->with('course.modules', 'course.categories')
+            ->get()
+            ->map(fn($uc) => [
+                'id' => $uc->id,
+                'course' => $uc->course,
+                'progress' => $uc->progress,
+            ]);
+
+        return response()->json(['data' => $courses]);
+    }
+
+    public function addComment(Request $request, CourseModule $module)
+    {
+        $request->validate([
+            'content' => 'required|string|max:1000'
+        ]);
+
+        // Implementasi untuk fitur diskusi di masa depan
+        return response()->json([
+            'data' => [
+                'message' => 'Fitur diskusi akan segera tersedia'
+            ]
+        ]);
+    }
+
+    public function viewCertificate(\App\Models\Certificate $certificate)
+    {
+        // Implementasi untuk view certificate
+        return response()->json(['data' => $certificate]);
+    }
+
+    public function downloadCertificate(\App\Models\Certificate $certificate)
+    {
+        // Implementasi untuk download certificate
+        return response()->download(storage_path("app/certificates/{$certificate->id}.pdf"));
+    }
+}
+

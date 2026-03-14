@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Ecourse\Course;
 
 class Speaker extends Model
 {
@@ -24,5 +25,15 @@ class Speaker extends Model
             'event_speakers'
         )->withPivot(['event_code', 'speaker_code'])
         ->withTimestamps();
+    }
+
+    public function courses()
+    {
+        return $this->hasMany(Course::class, 'speaker_id');
+    }
+
+    public function ecourses()
+    {
+        return $this->hasOne(Course::class, 'speaker_id');
     }
 }

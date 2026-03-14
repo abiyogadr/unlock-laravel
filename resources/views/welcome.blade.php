@@ -115,6 +115,41 @@
         </div>
     </section>
 
+
+    <!-- 1.5 E-Course Categories (Hero Style Background) -->
+    <section class="w-full bg-gradient-to-br from-primary to-purple-800 text-white py-6 md:py-12">
+        <div class="container mx-auto px-4 max-w-7xl">
+            <div class="flex flex-col lg:flex-row items-center gap-6">
+                <div class="lg:w-4/12">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Unlock E-Course</h2>
+                    <p class="text-base md:text-lg text-white/90 mb-2">Pelajari topik-topik profesional secara mendalam melalui E-Course kami. Pilih kategori untuk menemukan kursus yang sesuai dengan kebutuhanmu.</p>
+                </div>
+                <div class="lg:w-8/12 w-full">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3">
+                            <a href="{{ route('ecourse.catalog') }}" class="flex items-center gap-3 p-3 bg-white/10 hover:bg-white/20 rounded-lg transition" aria-label="Semua Kategori">
+                                <div class="min-w-10 min-h-10 rounded-md bg-white/10 flex items-center justify-center">
+                                    <i class="fas fa-th-large text-white"></i>
+                                </div>
+                                <div class="text-left">
+                                    <div class="font-semibold text-sm">Semua Kategori</div>
+                                </div>
+                            </a>
+                        @foreach($categories as $cat)
+                            <a href="{{ route('ecourse.catalog', ['category' => $cat->slug]) }}" class="flex items-center gap-3 p-3 bg-white/10 hover:bg-white/20 rounded-lg transition">
+                                <div class="min-w-10 min-h-10 rounded-md bg-white/10 flex items-center justify-center">
+                                    <i class="{{ $cat->icon }} text-white text-xl"></i>
+                                </div>
+                                <div class="text-left">
+                                    <div class="font-semibold text-sm">{{ $cat->name }}</div>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- 2. Open Events Section (Full Width Background Gray) -->
     <section class="w-full py-8 md:py-16 bg-gray-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">

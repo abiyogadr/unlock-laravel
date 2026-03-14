@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
+use App\Models\Ecourse\CourseCertificate as EcourseCertificate;
 
 class CertificateController extends Controller
 {
@@ -24,19 +25,34 @@ class CertificateController extends Controller
             'certificate_id.required' => 'ID Sertifikat wajib diisi.'
         ]);
 
-        $certificate = DB::table('certificates')
-            ->where('cert_id', $validated['certificate_id'])
-            ->where('publish_date', '<=', now())
-            ->first();
+        $certificateId = $validated['certificate_id'];
+
+        if ($this->isEcourseCertificate($certificateId)) {
+            $certificate = EcourseCertificate::where('certificate_number', $certificateId)->first();
+        } else {
+            $certificate = DB::table('certificates')
+                ->where('cert_id', $certificateId)
+                ->where('publish_date', '<=', now())
+                ->first();
+        }
 
         if (!$certificate) {
             return back()->withErrors(['certificate_id' => 'ID Sertifikat tidak ditemukan atau belum dipublikasi.'])->withInput();
         }
 
-    return redirect()->route('certificate.view', ['id' => $certificate->cert_id]);
+        return redirect()->route('certificate.view', ['id' => $certificateId]);
     }
 
     public function show($cert_id)
+    {
+        if ($this->isEcourseCertificate($cert_id)) {
+            return $this->showEcourseCertificate($cert_id);
+        }
+
+        return $this->showEventCertificate($cert_id);
+    }
+
+    private function showEventCertificate($cert_id)
     {
         $certificate = DB::table('certificates')
             ->where('cert_id', $cert_id)
@@ -82,6 +98,47 @@ class CertificateController extends Controller
         ];
 
         return view($viewPath, $data);
+    }
+
+    private function showEcourseCertificate($cert_id)
+    {
+        // Fetch certificate without relying on removed template relation/table
+        $certificate = EcourseCertificate::where('certificate_number', $cert_id)->first();
+
+        if (!$certificate) {
+            return redirect()->route('certificate')->withErrors('Sertifikat tidak valid.');
+        }
+
+        // Prefer dedicated ecourse blade template that matches event layout
+        $viewPath = 'certificates.templates.template_ecourse1';
+        if (! View::exists($viewPath)) {
+            // Fallback to event template 1 if dedicated ecourse template is not present
+            $viewPath = 'certificates.templates.template1';
+        }
+
+        $data = [
+            'participant_name' => $certificate->user_name,
+            'main_title' => $certificate->course_title,
+            'sub_title' => '',
+            'speaker_name' => '',
+            'speaker_titles' => '',
+            'event_date' => optional($certificate->issued_at)->format('d F Y'),
+            'date_extra' => null,
+            'certificate_id' => $certificate->certificate_number,
+            'sign_path' => null,
+            'has_sign' => false,
+            'credential_url' => route('certificate.view', $certificate->certificate_number),
+            'verify_url' => route('certificate'),
+            'score' => $certificate->score,
+        ];
+
+        return view($viewPath, $data);
+    }
+
+
+    private function isEcourseCertificate(string $certificateId): bool
+    {
+        return Str::startsWith($certificateId, 'UNL-ECO');
     }
 
 }

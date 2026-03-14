@@ -8,11 +8,11 @@
         <div class="flex h-11">
             <input type="text" 
                    id="cert-url" 
-                   class="grow border border-slate-200 bg-slate-50 px-4 rounded-l-lg text-sm text-slate-600 outline-none focus:border-purple-900 focus:bg-white transition-all" 
+                   class="grow border border-slate-200 bg-slate-50 px-4 rounded-l-lg text-sm text-slate-600 outline-none focus:border-purple-900 focus:bg-white transition-aller" 
                    value="{{ $credential_url }}" 
                    readonly>
             <button id="btnCopy" 
-                    class="bg-purple-950 text-white px-6 rounded-r-lg font-semibold text-sm hover:bg-purple-900 flex items-center gap-2 transition-colors active:scale-95">
+                    class="bg-purple-900 text-white px-6 rounded-r-lg font-semibold text-sm hover:bg-purple-900/90 flex items-center gap-2 transition-colors active:scale-95 cursor-pointer">
                 <i class="far fa-copy"></i> Copy
             </button>
         </div>
@@ -24,7 +24,7 @@
             Download PNG
         </label>
         <button id="downloadBtn" 
-                class="h-11 w-full bg-orange-600 text-white rounded-lg font-bold text-sm hover:bg-orange-700 flex items-center justify-center gap-2 shadow-lg shadow-orange-600/20 transition-all active:scale-95 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed">
+                class="h-11 w-full bg-orange-600 text-white rounded-lg font-bold text-sm hover:bg-orange-600/90 flex items-center justify-center gap-2 shadow-lg shadow-orange-600/20 transition-all active:scale-95 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed cursor-pointer">
             <i class="fas fa-download"></i> Download
         </button>
     </div>

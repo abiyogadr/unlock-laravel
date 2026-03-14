@@ -70,7 +70,7 @@
                 <div id="qrcode-container" class="w-[85px] h-[85px] bg-white p-1 border border-slate-100 shadow-sm" data-qr-text="{{ $credential_url }}"></div>
                 <div class="text-[7pt] text-slate-400 text-center leading-tight mt-2">
                     ID: <span class="font-bold text-slate-500">{{ $certificate_id }}</span><br>
-                    Verify at: {{ parse_url($verify_url, PHP_URL_HOST) }}
+                    Verify at: {{ parse_url($verify_url, PHP_URL_HOST) }}/certificate
                 </div>
             </div>
 

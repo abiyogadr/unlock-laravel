@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\Ecourse\CourseCategory;
 
 class HomeController extends Controller
 {
@@ -14,6 +15,9 @@ class HomeController extends Controller
             ->limit(6)
             ->get();
 
-        return view('welcome', compact('events'));
+        // Load active e-course categories to show on homepage
+        $categories = CourseCategory::active()->get();
+
+        return view('welcome', compact('events', 'categories'));
     }
 }

@@ -166,6 +166,8 @@ class AuthController extends Controller
             }
         }
 
+        $validated['username'] = strtolower($validated['username']);
+
         $user = User::create([
             'name'     => $validated['name'],
             'username' => $validated['username'],

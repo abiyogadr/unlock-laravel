@@ -22,6 +22,8 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ToolsController;
+use App\Http\Controllers\Ecourse\EcourseController;
+use App\Http\Controllers\Ecourse\CourseController;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -187,23 +189,6 @@ Route::get('/faq', function () {return view('pages.faq');})->name('faq');
 Route::get('/about', function () {return view('pages.about');})->name('about');
 Route::get('/policy', function () {return view('pages.policy');})->name('policy');
 
-
-/**TOOLS */
-Route::prefix('tools')->middleware(['auth', 'admin'])->name('tools.')->group(function () {
-    
-    // Dashboard Utama Tools (Daftar semua tools)
-    Route::get('/', [ToolsController::class, 'index'])->name('index');
-
-    // Grouping khusus untuk Fitur Email Blast
-    Route::prefix('email-blast')->name('email-blast.')->group(function () {
-        Route::get('/', [ToolsController::class, 'blastIndex'])->name('index'); // view/tools/blast.blade.php
-        Route::post('/send', [ToolsController::class, 'send'])->name('send');
-        Route::get('/progress/{batchId}', [ToolsController::class, 'progress'])->name('progress');
-        Route::get('/history', [ToolsController::class, 'getHistory'])->name('history');
-        Route::post('/cancel/{batchId}', [ToolsController::class, 'cancelBatch'])->name('cancel');
-    });
-
-    // Placeholder untuk tools masa depan (Contoh)
-    // Route::prefix('whatsapp-bot')->name('wa.')->group(function () { ... });
-});
-Route::get('/tools/email-blast/track', [ToolsController::class, 'trackOpen'])->name('tools.email-blast.track');
+/**E-COURSE */
+// Load E-Course Inertia routes
+require base_path('routes/ecourse-inertia.php');
