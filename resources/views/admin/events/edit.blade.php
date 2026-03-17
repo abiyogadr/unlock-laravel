@@ -177,7 +177,7 @@
                     
                     <div class="flex flex-wrap items-start gap-3">
                         <!-- Dropdown -->
-                        <div class="w-64 flex-shrink-0">
+                        <div class="w-full sm:w-64 flex-shrink-0">
                             <select @change="addPacket($event.target.value)" 
                                     class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary">
                                 <option value="">Pilih paket...</option>

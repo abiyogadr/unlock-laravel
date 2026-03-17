@@ -66,7 +66,9 @@
                     </a>
                 </div>
 
-                <p style="font-size: 14px; color: #64748b;">Informasi mengenai akses webinar (Zoom link) atau materi pelatihan akan kami kirimkan melalui email kembali atau WhatsApp menjelang hari pelaksanaan acara.</p>
+                <p style="font-size: 14px; color: #64748b;">
+                Informasi mengenai akses webinar (Zoom link) atau materi pelatihan akan tersedia di halaman <strong>Event Saya</strong> maksimal H-1 sebelum hari pelaksanaan acara.
+                </p>
 
                 <div class="btn-container">
                     <a href="{{ route('event.index') }}" class="button">Lihat Event Lainnya</a>

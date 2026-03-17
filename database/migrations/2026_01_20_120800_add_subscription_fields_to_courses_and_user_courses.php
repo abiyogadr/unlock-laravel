@@ -25,7 +25,7 @@ return new class extends Migration
                 $table->timestamp('access_expires_at')->nullable()->after('completed_at');
             }
             if (!Schema::hasColumn('user_courses', 'acquisition_type')) {
-                $table->enum('acquisition_type', ['idr', 'ustar', 'free', 'subscription'])->default('direct')->after('access_expires_at');
+                $table->enum('acquisition_type', ['idr', 'ustar', 'free', 'subscription'])->default('idr')->after('access_expires_at');
             }
             if (!Schema::hasColumn('user_courses', 'module_progress')) {
                 $table->decimal('module_progress', 5, 2)->default(0)->after('progress');

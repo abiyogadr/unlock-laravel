@@ -41,7 +41,7 @@
                 <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                     <i class="fas fa-users text-gray-400"></i> Daftar Peserta
                 </h3>
-                <div class="flex items-center gap-4">
+                <div class="flex flex-wrap items-center gap-4">
                     {{-- Toggle Presensi --}}
                     <div x-data="{ 
                             is_open: {{ $event->is_attendance_open ? 'true' : 'false' }},
@@ -105,12 +105,12 @@
                     </button>
 
                     {{-- Filter & Search di Kanan --}}
-                    <form method="GET" x-data class="ml-auto flex items-center gap-2 flex-1 lg:flex-none lg:w-96">
+                    <form method="GET" x-data class="md:ml-auto flex flex-1 flex-wrap items-center gap-2 lg:flex-none lg:w-96">
                         <div class="flex items-center gap-2 w-full lg:w-auto">
                             {{-- Filter Status --}}
                             <select name="status" 
                                     x-on:change="$el.form.submit()"
-                                    class="text-sm border border-primary/50 rounded-lg focus:ring-primary focus:border-primary px-3 py-2 w-full lg:w-36 bg-white min-w-[140px]">
+                                    class="text-sm border border-primary/50 rounded-lg focus:ring-primary focus:border-primary px-3 py-2 w-32 sm:w-36 bg-white">
                                 <option value="all">Semua Status</option>
                                 <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                                 <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Verified</option>
@@ -119,7 +119,7 @@
                             </select>
 
                             {{-- Search --}}
-                            <div class="relative flex-1 lg:w-52 min-w-0">
+                            <div class="relative flex-1 min-w-0">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs z-10"></i>
                                 <input type="text" name="search" value="{{ request('search') }}" 
                                     x-on:input.debounce.500ms="$el.form.submit()"
