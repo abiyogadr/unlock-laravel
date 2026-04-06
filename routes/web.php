@@ -8,6 +8,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Admin\{
     AdminDashboardController,
+    AdminEcourseController,
     AdminEventController,
     AdminPacketController,
     AdminRegistrationController,
@@ -154,6 +155,11 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 
 Route::prefix('upanel')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/ecourse', [AdminEcourseController::class, 'index'])->name('ecourse.index');
+    Route::get('/ecourse/data', [AdminEcourseController::class, 'data'])->name('ecourse.data');
+    Route::get('/ecourse/summary', [AdminEcourseController::class, 'summary'])->name('ecourse.summary');
+    Route::get('/ecourse/export', [AdminEcourseController::class, 'export'])->name('ecourse.export');
+    Route::get('/ecourse/transactions/{transaction}', [AdminEcourseController::class, 'show'])->name('ecourse.show');
     
     Route::resource('events', AdminEventController::class);
     Route::resource('packets', AdminPacketController::class);

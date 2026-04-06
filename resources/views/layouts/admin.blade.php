@@ -42,6 +42,12 @@
                 <i class="fas fa-clipboard-list w-5"></i>
                 <span>Registrations</span>
             </a>
+
+            <a href="{{ route('admin.ecourse.index') }}" 
+               class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all {{ request()->routeIs('admin.ecourse.*') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-50 hover:text-primary hover:shadow-sm' }}">
+                <i class="fas fa-graduation-cap w-5"></i>
+                <span>Ecourse</span>
+            </a>
         </nav>
     </aside>
 
