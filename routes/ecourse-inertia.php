@@ -7,6 +7,7 @@ use App\Http\Controllers\Ecourse\PaymentInertiaController;
 
 // Public E-Course catalog (accessible without auth)
 Route::get('/ecourse/catalog', [CourseInertiaController::class, 'catalog'])->name('ecourse.catalog');
+Route::get('/ecourse', [CourseInertiaController::class, 'catalog']);
 
 // Course show (public - viewable without login)
 Route::get('/ecourse/course/{course:slug}', [CourseInertiaController::class, 'show'])->name('ecourse.course.show');
