@@ -25,6 +25,7 @@ class AdminEcourseController extends Controller
             'initialFilters' => [
                 'month' => $selectedMonth,
                 'type' => $request->string('type')->toString() ?: 'all',
+                'status' => $this->resolveStatus($request->string('status')->toString()),
                 'search' => $request->string('search')->toString(),
                 'per_page' => 15,
             ],
@@ -240,6 +241,10 @@ class AdminEcourseController extends Controller
             });
         }
 
+            if ($filters['status'] !== 'all') {
+                $query->where('status', $filters['status']);
+            }
+
         if ($filters['search'] !== '') {
             $search = '%' . $filters['search'] . '%';
 
@@ -297,6 +302,7 @@ class AdminEcourseController extends Controller
             'type' => in_array($request->string('type')->toString(), ['all', 'ecourse', 'package'], true)
                 ? $request->string('type')->toString()
                 : 'all',
+            'status' => $this->resolveStatus($request->string('status')->toString()),
             'search' => trim($request->string('search')->toString()),
             'per_page' => $perPage,
         ];
@@ -438,6 +444,17 @@ class AdminEcourseController extends Controller
 
         if ($requestedMonth && in_array($requestedMonth, $validMonths, true)) {
             return $requestedMonth;
+        }
+
+        return 'all';
+    }
+
+    private function resolveStatus(?string $requestedStatus): string
+    {
+        $validStatuses = ['all', 'paid', 'pending', 'failed', 'expired', 'canceled'];
+
+        if ($requestedStatus && in_array($requestedStatus, $validStatuses, true)) {
+            return $requestedStatus;
         }
 
         return 'all';

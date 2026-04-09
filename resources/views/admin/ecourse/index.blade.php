@@ -26,36 +26,60 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-3 items-end">
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Bulan</label>
-                    <select class="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 bg-white focus:ring-primary focus:border-primary" data-filter="month" data-month-select>
-                        @foreach($monthOptions as $option)
-                            <option value="{{ $option['value'] }}" @selected($initialFilters['month'] === $option['value'])>{{ $option['label'] }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Tipe Transaksi</label>
-                    <select class="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 bg-white focus:ring-primary focus:border-primary" data-filter="type">
-                        <option value="all" @selected($initialFilters['type'] === 'all')>Semua Tipe</option>
-                        <option value="ecourse" @selected($initialFilters['type'] === 'ecourse')>Ecourse</option>
-                        <option value="package" @selected($initialFilters['type'] === 'package')>Package</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Search</label>
-                    <div class="relative">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400"></i>
-                        <input
-                            type="text"
-                            value="{{ $initialFilters['search'] }}"
-                            placeholder="ID transaksi / judul / customer"
-                            class="w-full pl-9 pr-4 py-2 text-xs border border-gray-200 rounded-lg focus:ring-primary focus:border-primary"
-                            data-filter="search"
-                        >
-                    </div>
-                </div>
+            <div class="grid grid-cols-1 lg:grid-cols-7 gap-3 items-end">
+                <x-custom-select
+                    name="month"
+                    label="Bulan"
+                    :value="$initialFilters['month']"
+                    placeholder="Semua Bulan"
+                    class="lg:col-span-1"
+                >
+                    @foreach($monthOptions as $option)
+                        <x-custom-select-item val="{{ $option['value'] }}" label="{{ $option['label'] }}">
+                            {{ $option['label'] }}
+                        </x-custom-select-item>
+                    @endforeach
+                </x-custom-select>
+
+                <x-custom-select
+                    name="type"
+                    label="Tipe Transaksi"
+                    :value="$initialFilters['type']"
+                    placeholder="Semua Tipe"
+                    class="lg:col-span-1"
+                >
+                    <x-custom-select-item val="all" label="Semua Tipe">Semua Tipe</x-custom-select-item>
+                    <x-custom-select-item val="ecourse" label="Ecourse">Ecourse</x-custom-select-item>
+                    <x-custom-select-item val="package" label="Package">Package</x-custom-select-item>
+                </x-custom-select>
+
+                <x-custom-select
+                    name="status"
+                    label="Status"
+                    :value="$initialFilters['status']"
+                    placeholder="Semua Status"
+                    class="lg:col-span-1"
+                >
+                    <x-custom-select-item val="all" label="Semua Status">Semua Status</x-custom-select-item>
+                    <x-custom-select-item val="paid" label="Paid">Paid</x-custom-select-item>
+                    <x-custom-select-item val="pending" label="Pending">Pending</x-custom-select-item>
+                    <x-custom-select-item val="failed" label="Failed">Failed</x-custom-select-item>
+                    <x-custom-select-item val="expired" label="Expired">Expired</x-custom-select-item>
+                    <x-custom-select-item val="canceled" label="Canceled">Canceled</x-custom-select-item>
+                </x-custom-select>
+
+                <x-input-field
+                    name="search"
+                    label="Search"
+                    icon="fas fa-search"
+                    :value="$initialFilters['search']"
+                    placeholder="ID transaksi / judul / customer"
+                    class="lg:col-span-2"
+                    inputClass="text-xs"
+                    data-filter="search"
+                    :showError="false"
+                />
+
                 <div class="flex flex-wrap items-center gap-2 lg:justify-end lg:col-span-2">
                     <button type="button" class="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-slate-800 transition cursor-pointer" data-summary-open>
                         <i class="fas fa-chart-pie mr-2"></i>Summary
@@ -176,6 +200,8 @@
 
         const config = JSON.parse(configNode.textContent);
 
+        const getFilterElement = (name) => root.querySelector(`[data-filter="${name}"]`) || root.querySelector(`[name="${name}"]`);
+
         const state = {
             filters: { ...config.filters },
             page: 1,
@@ -192,11 +218,11 @@
             pageLabel: root.querySelector('[data-page-label]'),
             prevButton: root.querySelector('[data-page-action="prev"]'),
             nextButton: root.querySelector('[data-page-action="next"]'),
-            monthSelect: root.querySelector('[data-month-select]'),
             filterInputs: {
-                type: root.querySelector('[data-filter="type"]'),
-                month: root.querySelector('[data-filter="month"]'),
-                search: root.querySelector('[data-filter="search"]'),
+                type: getFilterElement('type'),
+                month: getFilterElement('month'),
+                status: getFilterElement('status'),
+                search: getFilterElement('search'),
             },
             resetButton: root.querySelector('[data-reset-filters]'),
             downloadButton: root.querySelector('[data-download-csv]'),
@@ -239,6 +265,7 @@
             const params = new URLSearchParams({
                 month: state.filters.month,
                 type: state.filters.type,
+                status: state.filters.status,
                 search: state.filters.search,
                 page: String(page),
                 per_page: String(state.filters.per_page || 15),
@@ -250,20 +277,12 @@
         const syncInputsToState = () => {
             state.filters.month = elements.filterInputs.month.value;
             state.filters.type = elements.filterInputs.type.value;
+            state.filters.status = elements.filterInputs.status.value;
             state.filters.search = elements.filterInputs.search.value.trim();
         };
 
         const resetFilters = () => {
-            state.filters = {
-                ...config.filters,
-                search: '',
-                type: 'all',
-            };
-            state.page = 1;
-            elements.filterInputs.type.value = state.filters.type;
-            elements.filterInputs.month.value = state.filters.month;
-            elements.filterInputs.search.value = state.filters.search;
-            fetchData();
+            window.location.href = window.location.pathname;
         };
 
         const renderStats = (stats) => {
@@ -664,36 +683,44 @@
             }
         };
 
-        elements.resetButton.addEventListener('click', resetFilters);
+        if (elements.resetButton) {
+            elements.resetButton.addEventListener('click', resetFilters);
+        }
 
-        elements.downloadButton.addEventListener('click', () => {
-            syncInputsToState();
-            window.location.href = `${config.endpoints.export}?${buildQuery(1)}`;
-        });
+        if (elements.downloadButton) {
+            elements.downloadButton.addEventListener('click', () => {
+                syncInputsToState();
+                window.location.href = `${config.endpoints.export}?${buildQuery(1)}`;
+            });
+        }
 
-        elements.summaryButton.addEventListener('click', async () => {
-            openSummaryModal();
+        if (elements.summaryButton) {
+            elements.summaryButton.addEventListener('click', async () => {
+                openSummaryModal();
 
-            if (!elements.summaryMonth.options.length) {
-                elements.summaryMonth.innerHTML = config.summaryMonthOptions.map((option) => `
-                    <option value="${option.value}" ${option.value === config.summaryDefaultMonth ? 'selected' : ''}>${escapeHtml(option.label)}</option>
-                `).join('');
-            }
+                if (!elements.summaryMonth.options.length) {
+                    elements.summaryMonth.innerHTML = config.summaryMonthOptions.map((option) => `
+                        <option value="${option.value}" ${option.value === config.summaryDefaultMonth ? 'selected' : ''}>${escapeHtml(option.label)}</option>
+                    `).join('');
+                }
 
-            try {
-                await fetchSummary(elements.summaryMonth.value || config.summaryDefaultMonth);
-            } catch (error) {
-                elements.summaryContent.innerHTML = `<div class="text-sm text-red-500">${escapeHtml(error.message)}</div>`;
-            }
-        });
+                try {
+                    await fetchSummary(elements.summaryMonth.value || config.summaryDefaultMonth);
+                } catch (error) {
+                    elements.summaryContent.innerHTML = `<div class="text-sm text-red-500">${escapeHtml(error.message)}</div>`;
+                }
+            });
+        }
 
-        elements.summaryMonth.addEventListener('change', async (event) => {
-            try {
-                await fetchSummary(event.target.value);
-            } catch (error) {
-                elements.summaryContent.innerHTML = `<div class="text-sm text-red-500">${escapeHtml(error.message)}</div>`;
-            }
-        });
+        if (elements.summaryMonth) {
+            elements.summaryMonth.addEventListener('change', async (event) => {
+                try {
+                    await fetchSummary(event.target.value);
+                } catch (error) {
+                    elements.summaryContent.innerHTML = `<div class="text-sm text-red-500">${escapeHtml(error.message)}</div>`;
+                }
+            });
+        }
 
         let searchTimer = null;
 
@@ -702,24 +729,37 @@
             fetchData(1);
         };
 
-        elements.filterInputs.month.addEventListener('change', triggerAutoFilter);
-        elements.filterInputs.type.addEventListener('change', triggerAutoFilter);
-        elements.filterInputs.search.addEventListener('input', () => {
-            window.clearTimeout(searchTimer);
-            searchTimer = window.setTimeout(triggerAutoFilter, 350);
-        });
+        if (elements.filterInputs.month) {
+            elements.filterInputs.month.addEventListener('change', triggerAutoFilter);
+        }
+        if (elements.filterInputs.type) {
+            elements.filterInputs.type.addEventListener('change', triggerAutoFilter);
+        }
+        if (elements.filterInputs.status) {
+            elements.filterInputs.status.addEventListener('change', triggerAutoFilter);
+        }
+        if (elements.filterInputs.search) {
+            elements.filterInputs.search.addEventListener('input', () => {
+                window.clearTimeout(searchTimer);
+                searchTimer = window.setTimeout(triggerAutoFilter, 350);
+            });
+        }
 
-        elements.prevButton.addEventListener('click', () => {
-            if (state.pagination?.current_page > 1) {
-                fetchData(state.pagination.current_page - 1);
-            }
-        });
+        if (elements.prevButton) {
+            elements.prevButton.addEventListener('click', () => {
+                if (state.pagination?.current_page > 1) {
+                    fetchData(state.pagination.current_page - 1);
+                }
+            });
+        }
 
-        elements.nextButton.addEventListener('click', () => {
-            if (state.pagination?.current_page < state.pagination?.last_page) {
-                fetchData(state.pagination.current_page + 1);
-            }
-        });
+        if (elements.nextButton) {
+            elements.nextButton.addEventListener('click', () => {
+                if (state.pagination?.current_page < state.pagination?.last_page) {
+                    fetchData(state.pagination.current_page + 1);
+                }
+            });
+        }
 
         root.addEventListener('click', (event) => {
             const trigger = event.target.closest('[data-view-transaction]');

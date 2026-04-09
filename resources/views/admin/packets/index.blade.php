@@ -19,7 +19,7 @@
         <div class="p-4 md:p-6 border-b border-gray-100">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Daftar Paket Webinar</h3>
             
-            <form action="{{ route('admin.packets.index') }}" method="GET" x-data>
+            <form action="{{ route('admin.packets.index') }}" method="GET" x-data data-admin-filter-form>
                 <div class="grid grid-cols-1 sm:grid-cols-6 gap-3 md:gap-4">
                     
                     {{-- 1. Search --}}
@@ -30,7 +30,6 @@
                         :value="request('search')" 
                         placeholder="Ketik nama paket..."
                         class="col-span-3"
-                        x-on:input.debounce.500ms="$el.closest('form').submit()"
                         :showError="false"
                     />
 
@@ -41,7 +40,6 @@
                         :value="request('status', 'all')" 
                         placeholder="Semua Status"
                         class="col-span-2"
-                        onchange="this.form.submit()"
                     >
                         <x-custom-select-item val="all" label="Semua Status">Semua Status</x-custom-select-item>
                         <x-custom-select-item val="active" label="Active">
@@ -54,20 +52,21 @@
 
                     {{-- 3. Reset --}}
                     <div class="col-span-1 flex items-end">
-                        @if(request()->filled('search') || request('status', 'all') !== 'all')
-                            <a href="{{ route('admin.packets.index') }}" 
-                               class="w-full py-2 px-3 bg-red-50 text-red-600 border border-red-100 rounded-lg hover:bg-red-100 text-sm font-medium transition text-center flex items-center justify-center gap-2">
-                                <i class="fas fa-undo"></i> Reset
-                            </a>
-                        @else
-                            <div class="w-full py-2 px-3 text-gray-300 text-sm font-medium text-center border border-gray-100 rounded-lg bg-gray-50 cursor-not-allowed">
-                                <i class="fas fa-filter"></i> Auto
-                            </div>
-                        @endif
+                        <button type="button"
+                               data-admin-filter-reset
+                               class="w-full py-2 px-3 text-sm font-medium transition text-center flex items-center justify-center gap-2 rounded-lg border cursor-pointer {{ request()->filled('search') || request('status', 'all') !== 'all' ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100' : 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed' }}">
+                                @if(request()->filled('search') || request('status', 'all') !== 'all')
+                                    <i class="fas fa-undo"></i> Reset
+                                @else
+                                    <i class="fas fa-filter"></i> Auto Filter
+                                @endif
+                        </button>
                     </div>
                 </div>
             </form>
         </div>
+
+        <div data-admin-filter-results>
 
         {{-- DESKTOP TABLE --}}
         <div class="hidden md:block overflow-x-auto">
@@ -150,10 +149,12 @@
 
         {{-- PAGINATION --}}
         @if($packets->hasPages())
-        <div class="p-4 bg-gray-50 border-t border-gray-100">
+        <div class="p-4 bg-gray-50 border-t border-gray-100" data-admin-pagination>
             {{ $packets->appends(request()->query())->links() }}
         </div>
         @endif
+
+        </div>
     </div>
 
     {{-- MODAL DELETE --}}
@@ -196,5 +197,136 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 });
+</script>
+
+<script>
+(() => {
+    const form = document.querySelector('[data-admin-filter-form]');
+    const results = document.querySelector('[data-admin-filter-results]');
+    const resetButton = document.querySelector('[data-admin-filter-reset]');
+
+    if (!form || !results) {
+        return;
+    }
+
+    let searchTimer = null;
+
+    const buildUrl = () => {
+        const params = new URLSearchParams();
+        const formData = new FormData(form);
+
+        for (const [key, value] of formData.entries()) {
+            const normalized = String(value ?? '').trim();
+            if (normalized !== '' && normalized !== 'all') {
+                params.set(key, value);
+            }
+        }
+
+        return `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+    };
+
+    const hasActiveFilters = () => {
+        const formData = new FormData(form);
+
+        for (const [key, value] of formData.entries()) {
+            const normalized = String(value ?? '').trim();
+
+            if (normalized !== '' && normalized !== 'all') {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    const syncActionButton = () => {
+        if (!resetButton) {
+            return;
+        }
+
+        const active = hasActiveFilters();
+
+        resetButton.disabled = !active;
+        resetButton.className = `w-full py-2 px-3 text-sm font-medium transition text-center flex items-center justify-center gap-2 rounded-lg border ${active ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100 cursor-pointer' : 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'}`;
+        resetButton.innerHTML = active ? '<i class="fas fa-undo"></i> Reset' : '<i class="fas fa-filter"></i> Auto Filter';
+    };
+
+    const replaceResults = async (url) => {
+        const response = await fetch(url, {
+            headers: {
+                'Accept': 'text/html',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Gagal memuat data.');
+        }
+
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const nextResults = doc.querySelector('[data-admin-filter-results]');
+
+        if (nextResults) {
+            results.innerHTML = nextResults.innerHTML;
+        }
+
+        window.history.replaceState({}, '', url);
+        syncActionButton();
+    };
+
+    const resetFilters = () => {
+        const searchInput = form.querySelector('[name="search"]');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+
+        window.dispatchEvent(new CustomEvent('admin-filters-reset'));
+        syncActionButton();
+        replaceResults(window.location.pathname).catch((error) => console.error(error));
+    };
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        replaceResults(buildUrl()).catch((error) => console.error(error));
+    });
+
+    form.addEventListener('input', (event) => {
+        if (!event.target || event.target.name !== 'search') {
+            return;
+        }
+
+        window.clearTimeout(searchTimer);
+        searchTimer = window.setTimeout(() => {
+            replaceResults(buildUrl()).catch((error) => console.error(error));
+        }, 350);
+    });
+
+    form.addEventListener('change', (event) => {
+        if (event.target && event.target.name === 'search') {
+            return;
+        }
+
+        syncActionButton();
+        replaceResults(buildUrl()).catch((error) => console.error(error));
+    });
+
+    if (resetButton) {
+        resetButton.addEventListener('click', resetFilters);
+    }
+
+    syncActionButton();
+
+    results.addEventListener('click', (event) => {
+        const paginationLink = event.target.closest('[data-admin-pagination] a');
+
+        if (!paginationLink) {
+            return;
+        }
+
+        event.preventDefault();
+        replaceResults(paginationLink.href).catch((error) => console.error(error));
+    });
+})();
 </script>
 @endsection

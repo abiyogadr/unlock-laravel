@@ -13,35 +13,32 @@
 
 {{-- 1. Statistik Cards - Responsive Grid --}}
 <div x-data="certificateManager()">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
-        <div class="bg-white p-3 md:p-4 rounded-xl border border-gray-100 shadow-sm">
-            <p class="text-[10px] md:text-xs text-gray-500 uppercase font-semibold">Total Peserta</p>
-            <p class="text-lg md:text-2xl font-bold text-gray-800 mt-1">{{ $stats['total'] }}</p>
-        </div>
-        <div class="bg-white p-3 md:p-4 rounded-xl border border-gray-100 shadow-sm border-l-4 border-l-yellow-400">
-            <p class="text-[10px] md:text-xs text-gray-500 uppercase font-semibold">Pending</p>
-            <p class="text-lg md:text-2xl font-bold text-yellow-600 mt-1">{{ $stats['pending'] }}</p>
-        </div>
-        <div class="bg-white p-3 md:p-4 rounded-xl border border-gray-100 shadow-sm border-l-4 border-l-green-500">
-            <p class="text-[10px] md:text-xs text-gray-500 uppercase font-semibold">Verified</p>
-            <p class="text-lg md:text-2xl font-bold text-green-600 mt-1">{{ $stats['verified'] }}</p>
-        </div>
-        <div class="bg-white p-3 md:p-4 rounded-xl border border-gray-100 shadow-sm">
-            <p class="text-[10px] md:text-xs text-gray-500 uppercase font-semibold">Revenue</p>
-            <p class="text-sm md:text-xl font-bold text-primary mt-1">Rp {{ number_format($stats['revenue'], 0, ',', '.') }}</p>
-        </div>
-    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-visible min-h-[calc(100vh-220px)]">
+        <div class="p-4 md:p-5 border-b border-gray-100 space-y-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-3">
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm">
+                    <p class="text-[9px] md:text-[10px] text-gray-500 uppercase font-semibold">Total Peserta</p>
+                    <p class="text-base md:text-xl font-bold text-gray-800 mt-1">{{ $stats['total'] }}</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm border-l-4 border-l-yellow-400">
+                    <p class="text-[9px] md:text-[10px] text-gray-500 uppercase font-semibold">Pending</p>
+                    <p class="text-base md:text-xl font-bold text-yellow-600 mt-1">{{ $stats['pending'] }}</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm border-l-4 border-l-green-500">
+                    <p class="text-[9px] md:text-[10px] text-gray-500 uppercase font-semibold">Verified</p>
+                    <p class="text-base md:text-xl font-bold text-green-600 mt-1">{{ $stats['verified'] }}</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm">
+                    <p class="text-[9px] md:text-[10px] text-gray-500 uppercase font-semibold">Revenue</p>
+                    <p class="text-sm md:text-lg font-bold text-primary mt-1">Rp {{ number_format($stats['revenue'], 0, ',', '.') }}</p>
+                </div>
+            </div>
 
-    {{-- 2. Konten Utama --}}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        
-        {{-- Toolbar: Search & Filter --}}
-        <div class="p-4 md:p-5 border-b border-gray-100">
-            <div class="flex flex-col justify-between gap-4">
-                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <div class="flex flex-col gap-3">
+                <h3 class="text-base md:text-lg font-bold text-gray-800 flex items-center gap-2">
                     <i class="fas fa-users text-gray-400"></i> Daftar Peserta
                 </h3>
-                <div class="flex flex-wrap items-center gap-4">
+                <div class="flex flex-wrap items-center gap-2 md:gap-3">
                     {{-- Toggle Presensi --}}
                     <div x-data="{ 
                             is_open: {{ $event->is_attendance_open ? 'true' : 'false' }},
@@ -70,9 +67,9 @@
                                     this.loading = false;
                                 }
                             }
-                        }" class="relative z-10 flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100">
+                        }" class="relative z-10 flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
                         
-                        <span class="text-[10px] font-bold uppercase tracking-wider transition-colors" 
+                        <span class="text-[9px] font-bold uppercase tracking-wider transition-colors" 
                             :class="is_open ? 'text-green-600' : 'text-gray-400'" 
                             x-text="is_open ? 'Presensi Buka' : 'Presensi Tutup'">
                         </span>
@@ -88,87 +85,125 @@
 
                     {{-- Download Icon --}}
                     <a href="{{ route('admin.registrations.export', ['event_id' => $event->id]) }}" 
-                    class="text-lg font-bold flex items-center gap-2 text-green-600 hover:text-green-700">
+                    class="text-base font-bold flex items-center gap-2 text-green-600 hover:text-green-700">
                         <i class="fas fa-download"></i>
                     </a>
 
                     {{-- Generate Sertifikat --}}
                     <button @click="openModal()" 
-                            class="px-4 py-2 hidden md:block bg-primary text-white rounded-lg text-sm font-bold flex items-center gap-2 cursor-pointer hover:bg-primary/90 transition">
+                            class="px-4 py-2 hidden md:block bg-primary text-white rounded-lg text-xs font-bold flex items-center gap-2 cursor-pointer hover:bg-primary/90 transition">
                         <i class="fas fa-book"></i> Generate Sertifikat 
                     </button>
 
                     {{-- Tombol Baru: Kirim Reminder Email --}}
-                    <button onclick="sendReminderEmails({{ $event->id }})"
+                        <button type="button"
+                            data-send-reminder-email
+                            data-event-id="{{ $event->id }}"
                             class="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold flex items-center gap-2 cursor-pointer hover:bg-orange-600 transition hidden md:flex">
                         <i class="fas fa-bell"></i> Kirim Reminder
                     </button>
-
-                    {{-- Filter & Search di Kanan --}}
-                    <form method="GET" x-data class="md:ml-auto flex flex-1 flex-wrap items-center gap-2 lg:flex-none lg:w-96">
-                        <div class="flex items-center gap-2 w-full lg:w-auto">
-                            {{-- Filter Status --}}
-                            <select name="status" 
-                                    x-on:change="$el.form.submit()"
-                                    class="text-sm border border-primary/50 rounded-lg focus:ring-primary focus:border-primary px-3 py-2 w-32 sm:w-36 bg-white">
-                                <option value="all">Semua Status</option>
-                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Verified</option>
-                                <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
-                                <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                            </select>
-
-                            {{-- Search --}}
-                            <div class="relative flex-1 min-w-0">
-                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs z-10"></i>
-                                <input type="text" name="search" value="{{ request('search') }}" 
-                                    x-on:input.debounce.500ms="$el.form.submit()"
-                                    placeholder="Nama / Email / Kode..." 
-                                    class="pl-9 pr-4 py-2 w-full text-sm border-gray-300 rounded-lg focus:ring-primary focus:border-primary">
-                            </div>
-
-                            {{-- Reset --}}
-                            @if(request()->filled('search') || request('status', 'all') !== 'all')
-                                <a href="{{ route(request()->route()->getName(), $event->id) }}" 
-                                class="px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium flex items-center justify-center hover:bg-red-100 transition whitespace-nowrap">
-                                    <i class="fas fa-times text-xs"></i>
-                                </a>
-                            @endif
-                        </div>
-                    </form>
                 </div>
 
+                    {{-- Filter Row --}}
+                    <form method="GET" action="{{ route(request()->route()->getName(), $event->id) }}" x-data data-registrations-filters class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-2.5 items-end">
+                    <x-custom-select 
+                        name="packet" 
+                        :value="request('packet', 'all')" 
+                        placeholder="Semua Paket"
+                        class="w-full"
+                    >
+                        <x-custom-select-item val="all" label="Semua Paket">Semua Paket</x-custom-select-item>
+                        @foreach($event->packets as $packet)
+                            <x-custom-select-item val="{{ $packet->id }}" label="{{ $packet->pivot->packet_name ?? $packet->packet_name }}">
+                                {{ $packet->pivot->packet_name ?? $packet->packet_name }}
+                            </x-custom-select-item>
+                        @endforeach
+                    </x-custom-select>
+
+                    <x-custom-select 
+                        name="attendance" 
+                        :value="request('attendance', 'all')" 
+                        placeholder="Semua Presensi"
+                        class="w-full"
+                    >
+                        <x-custom-select-item val="all" label="Semua Presensi">Semua Presensi</x-custom-select-item>
+                        <x-custom-select-item val="attended" label="Hadir">Hadir</x-custom-select-item>
+                        <x-custom-select-item val="not_attended" label="Belum Hadir">Belum Hadir</x-custom-select-item>
+                    </x-custom-select>
+
+                    <x-custom-select 
+                        name="certificate" 
+                        :value="request('certificate', 'all')" 
+                        placeholder="Semua Sertifikat"
+                        class="w-full"
+                    >
+                        <x-custom-select-item val="all" label="Semua Sertifikat">Semua Sertifikat</x-custom-select-item>
+                        <x-custom-select-item val="generated" label="Sudah Generate">Sudah Generate</x-custom-select-item>
+                        <x-custom-select-item val="not_generated" label="Belum Generate">Belum Generate</x-custom-select-item>
+                    </x-custom-select>
+
+                    <x-custom-select 
+                        name="status" 
+                        :value="request('status', 'all')" 
+                        placeholder="Semua Status"
+                        class="w-full"
+                    >
+                        <x-custom-select-item val="all" label="Semua Status">Semua Status</x-custom-select-item>
+                        <x-custom-select-item val="pending" label="Pending">Pending</x-custom-select-item>
+                        <x-custom-select-item val="verified" label="Verified">Verified</x-custom-select-item>
+                        <x-custom-select-item val="rejected" label="Rejected">Rejected</x-custom-select-item>
+                        <x-custom-select-item val="cancelled" label="Cancelled">Cancelled</x-custom-select-item>
+                    </x-custom-select>
+
+                    <x-input-field
+                        name="search"
+                        icon="fas fa-search"
+                        :value="request('search')"
+                        placeholder="Nama / Email / Kode..."
+                        class="w-full xl:col-span-2"
+                        inputClass="text-xs"
+                        :showError="false"
+                    />
+
+                    <button type="button"
+                       data-registrations-reset
+                       @unless(request()->filled('search') || request('status', 'all') !== 'all' || request('packet', 'all') !== 'all' || request('attendance', 'all') !== 'all' || request('certificate', 'all') !== 'all') hidden @endunless
+                       class="px-3 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-medium flex items-center justify-center hover:bg-red-100 transition whitespace-nowrap border border-red-100 xl:justify-self-start cursor-pointer">
+                        <i class="fas fa-times text-xs mr-1"></i> Reset
+                    </button>
+                </form>
             </div>
         </div>
 
         {{-- VIEW DESKTOP --}}
-        <div class="hidden md:block overflow-x-auto">
+        <div class="hidden md:block overflow-x-auto" data-registrations-table-wrapper>
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 border-b border-gray-100 text-xs text-gray-500 uppercase font-semibold">
                     <tr>
-                        <th class="px-6 py-4 text-left">Peserta</th>
-                        <th class="px-6 py-4 text-left">Paket</th>
-                        <th class="px-6 py-4 text-left">Tanggal</th>
-                        <th class="px-6 py-4 text-left">Status</th>
-                        <th class="px-6 py-4 text-left">Presensi</th>
-                        <th class="px-6 py-4 text-left">Aksi</th>
+                        <th class="px-5 py-3 text-left">Peserta</th>
+                        <th class="px-5 py-3 text-left">Paket</th>
+                        <th class="px-5 py-3 text-left">Tanggal</th>
+                        <th class="px-5 py-3 text-left">Status</th>
+                        <th class="px-5 py-3 text-left">Presensi</th>
+                        <th class="px-5 py-3 text-left">Sertifikat</th>
+                        <th class="px-5 py-3 text-left">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 text-gray-700">
+                <tbody class="divide-y divide-gray-100 text-gray-700" data-registrations-table-body>
                     @forelse($registrations as $reg)
                     <tr class="hover:bg-gray-50 transition">
-                        <td class="px-6 py-4">
-                            <div class="font-semibold text-gray-900">{{ $reg->name }}</div>
-                            <div class="text-xs text-gray-400">{{ $reg->registration_code }}</div>
+                        <td class="px-5 py-3">
+                            <div class="font-semibold text-gray-900 text-sm">{{ $reg->name }}</div>
+                            <div class="text-[11px] text-gray-400">{{ $reg->registration_code }}</div>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-5 py-3">
                             <div class="font-medium text-gray-700">{{ $reg->packet->packet_name ?? '-' }}</div>
-                            <div class="text-xs text-gray-500">Rp {{ number_format($reg->packet->price ?? 0, 0, ',','.') }}</div>
+                            <div class="text-[11px] text-gray-500">Rp {{ number_format($reg->packet->price ?? 0, 0, ',','.') }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">
+                        <td class="px-5 py-3 whitespace-nowrap text-gray-500 text-sm">
                             {{ $reg->created_at->format('d M Y H:i') }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-5 py-3 whitespace-nowrap">
                             @php
                                 $colors = [
                                     'pending' => 'bg-yellow-100 text-yellow-800',
@@ -189,16 +224,23 @@
                                 @endif
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-[10px] font-bold rounded-full {{ $colors[$reg->is_attended  ] ?? 'bg-gray-100' }}">
+                        <td class="px-5 py-3 whitespace-nowrap">
+                            <span class="px-2 py-1 text-[10px] font-bold rounded-full {{ $reg->is_attended ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700' }}">
                                 {{ $reg->is_attended ? 'Terisi' : 'Belum' }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-right flex justify-start gap-3">
+                        <td class="px-5 py-3 whitespace-nowrap">
+                            <span class="px-2 py-1 text-[10px] font-bold rounded-full {{ $reg->certificate ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700' }}">
+                                {{ $reg->certificate ? 'Sudah Generate' : 'Belum Generate' }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3 text-right flex justify-start gap-3">
                             <a href="{{ route('myevents.show', $reg->id) }}" class="text-indigo-600 hover:underline">Detail</a>
                             @if($reg->registration_status === 'verified')
                                 <button type="button" 
-                                        onclick="confirmSingle('{{ $reg->id }}', {{ $reg->certificate ? 'true' : 'false' }})"
+                                        data-confirm-certificate
+                                        data-registration-id="{{ $reg->id }}"
+                                        data-has-certificate="{{ $reg->certificate ? '1' : '0' }}"
                                         class="text-indigo-600 font-bold flex items-center gap-1 cursor-pointer">
                                     <i class="fas fa-certificate"></i> Sertifikat
                                 </button>
@@ -206,41 +248,44 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="5" class="px-6 py-10 text-center text-gray-400">Tidak ada peserta.</td></tr>
+                    <tr><td colspan="7" class="px-6 py-10 text-center text-gray-400">Tidak ada peserta.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
         {{-- VIEW MOBILE --}}
-        <div class="md:hidden divide-y divide-gray-100">
+        <div class="md:hidden divide-y divide-gray-100" data-registrations-mobile-list>
             @forelse($registrations as $reg)
-            <div class="p-4 space-y-3 bg-white">
+            <div class="p-3 space-y-2.5 bg-white">
                 <div class="flex justify-between items-start">
                     <div>
-                        <div class="text-xs font-mono text-gray-400 mb-1">#{{ $reg->registration_code }}</div>
-                        <div class="font-bold text-gray-900">{{ $reg->name }}</div>
+                        <div class="text-[11px] font-mono text-gray-400 mb-1">#{{ $reg->registration_code }}</div>
+                        <div class="font-bold text-sm text-gray-900">{{ $reg->name }}</div>
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap justify-end gap-2">
                         <span class="px-2 py-1 text-[10px] font-bold rounded-full {{ $colors[$reg->registration_status] ?? 'bg-gray-100' }}">
                             {{ Str::title($reg->registration_status) }}
                         </span>
-                        <span class="px-2 py-1 text-[10px] font-bold rounded-full {{ $colors[$reg->is_attended] ?? 'bg-gray-100' }}">
+                        <span class="px-2 py-1 text-[10px] font-bold rounded-full {{ $reg->is_attended ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700' }}">
                             {{ $reg->is_attended ? 'Sudah Presensi' : 'Belum Presensi' }}
+                        </span>
+                        <span class="px-2 py-1 text-[10px] font-bold rounded-full {{ $reg->certificate ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700' }}">
+                            {{ $reg->certificate ? 'Sertifikat Ada' : 'Belum Generate' }}
                         </span>
                     </div>
                 </div>
-                <div class="flex justify-between text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                <div class="flex justify-between text-[11px] text-gray-600 bg-gray-50 p-2 rounded-lg">
                     <div>
                         <div class="text-gray-400 uppercase text-[9px] font-bold">Paket</div>
-                        <div class="font-medium">{{ $reg->packet->packet_name ?? '-' }}</div>
+                        <div class="font-medium text-xs">{{ $reg->packet->packet_name ?? '-' }}</div>
                     </div>
                     <div class="text-right">
                         <div class="text-gray-400 uppercase text-[9px] font-bold">Tanggal</div>
-                        <div>{{ $reg->created_at->format('d/m/y H:i') }}</div>
+                        <div class="text-xs">{{ $reg->created_at->format('d/m/y H:i') }}</div>
                     </div>
                 </div>
-                <a href="{{ route('myevents.show', $reg->id) }}" class="block w-full text-center py-2 bg-primary/10 text-primary rounded-lg text-sm font-bold">
+                <a href="{{ route('myevents.show', $reg->id) }}" class="block w-full text-center py-2 bg-primary/10 text-primary rounded-lg text-xs font-bold">
                     Lihat Detail / Verifikasi
                 </a>
             </div>
@@ -250,11 +295,11 @@
         </div>
 
         {{-- Pagination --}}
-        @if($registrations->hasPages())
-        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50">
-            {{ $registrations->withQueryString()->links() }}
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50" data-registrations-pagination @unless($registrations->hasPages()) hidden @endunless>
+            @if($registrations->hasPages())
+                {{ $registrations->withQueryString()->links() }}
+            @endif
         </div>
-        @endif
     </div>
     {{-- MODAL MASSAL DENGAN TABEL & SEARCH --}}
     <div x-show="open" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-cloak>
@@ -374,6 +419,167 @@
             window.location.href = `/upanel/registrations/${id}/generate-certificate`;
         }
     };
+
+    document.addEventListener('click', (event) => {
+        const certificateTrigger = event.target.closest('[data-confirm-certificate]');
+        if (certificateTrigger) {
+            event.preventDefault();
+            window.confirmSingle(
+                certificateTrigger.getAttribute('data-registration-id'),
+                certificateTrigger.getAttribute('data-has-certificate') === '1'
+            );
+            return;
+        }
+
+        const reminderTrigger = event.target.closest('[data-send-reminder-email]');
+        if (reminderTrigger) {
+            event.preventDefault();
+
+            if (typeof window.sendReminderEmails === 'function') {
+                window.sendReminderEmails(reminderTrigger.getAttribute('data-event-id'));
+                return;
+            }
+
+            alert('Fungsi kirim reminder belum tersedia.');
+        }
+    });
+
+    (() => {
+        const form = document.querySelector('[data-registrations-filters]');
+        const tableBody = document.querySelector('[data-registrations-table-body]');
+        const mobileList = document.querySelector('[data-registrations-mobile-list]');
+        const pagination = document.querySelector('[data-registrations-pagination]');
+        const resetLink = document.querySelector('[data-registrations-reset]');
+
+        if (!form || !tableBody || !mobileList || !pagination) {
+            return;
+        }
+
+        let searchTimer = null;
+
+        const buildUrl = () => {
+            const formData = new FormData(form);
+            const params = new URLSearchParams();
+
+            for (const [key, value] of formData.entries()) {
+                const normalized = String(value ?? '').trim();
+
+                if (normalized !== '' && normalized !== 'all') {
+                    params.set(key, value);
+                }
+            }
+
+            return `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+        };
+
+        const syncHistory = (url) => {
+            window.history.replaceState({}, '', url);
+
+            if (resetLink) {
+                const hasFilters = new URL(url, window.location.origin).searchParams.toString().length > 0;
+                resetLink.hidden = !hasFilters;
+            }
+        };
+
+        const resetFilters = () => {
+            const statusSelect = form.querySelector('[name="status"]');
+            const packetSelect = form.querySelector('[name="packet"]');
+            const attendanceSelect = form.querySelector('[name="attendance"]');
+            const certificateSelect = form.querySelector('[name="certificate"]');
+            const searchInput = form.querySelector('[name="search"]');
+
+            window.dispatchEvent(new CustomEvent('admin-registrations-filters-reset'));
+
+            if (statusSelect) statusSelect.value = 'all';
+            if (packetSelect) packetSelect.value = 'all';
+            if (attendanceSelect) attendanceSelect.value = 'all';
+            if (certificateSelect) certificateSelect.value = 'all';
+            if (searchInput) searchInput.value = '';
+
+            fetchRegistrations(window.location.pathname).catch((error) => console.error(error));
+        };
+
+        const replaceListFromHtml = (html) => {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const nextTableBody = doc.querySelector('[data-registrations-table-body]');
+            const nextMobileList = doc.querySelector('[data-registrations-mobile-list]');
+            const nextPagination = doc.querySelector('[data-registrations-pagination]');
+
+            if (nextTableBody) {
+                tableBody.innerHTML = nextTableBody.innerHTML;
+            }
+
+            if (nextMobileList) {
+                mobileList.innerHTML = nextMobileList.innerHTML;
+            }
+
+            if (nextPagination) {
+                pagination.innerHTML = nextPagination.innerHTML;
+                pagination.hidden = !nextPagination.innerHTML.trim();
+            }
+        };
+
+        const fetchRegistrations = async (url) => {
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'text/html',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Gagal memuat data peserta.');
+            }
+
+            const html = await response.text();
+            replaceListFromHtml(html);
+            syncHistory(url);
+        };
+
+        const submitFilters = async () => {
+            try {
+                await fetchRegistrations(buildUrl());
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        form.addEventListener('change', (event) => {
+            if (event.target && event.target.name === 'search') {
+                return;
+            }
+
+            submitFilters();
+        });
+
+        form.addEventListener('input', (event) => {
+            if (!event.target || event.target.name !== 'search') {
+                return;
+            }
+
+            window.clearTimeout(searchTimer);
+            searchTimer = window.setTimeout(submitFilters, 350);
+        });
+
+        if (resetLink) {
+            resetLink.addEventListener('click', (event) => {
+                event.preventDefault();
+                resetFilters();
+            });
+        }
+
+        pagination.addEventListener('click', (event) => {
+            const link = event.target.closest('a');
+
+            if (!link) {
+                return;
+            }
+
+            event.preventDefault();
+
+            fetchRegistrations(link.href).catch((error) => console.error(error));
+        });
+    })();
 
     function certificateManager() {
         return {

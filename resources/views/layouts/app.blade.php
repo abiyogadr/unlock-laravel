@@ -42,7 +42,7 @@
                     <div class="relative group" x-data="{ open: false }">
                         <!-- Tombol Trigger Dropdown -->
                         <button @click="open = !open" @click.away="open = false" 
-                                class="flex items-center gap-2 lg:px-3 py-1 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-100">
+                                class="flex items-center gap-2 lg:px-3 py-1 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-100 cursor-pointer">
                             
                             <div class="text-right">
                                 {{-- Desktop --}}
@@ -102,7 +102,7 @@
 
                             <form action="{{ route('logout') }}" method="POST" class="block">
                                 @csrf
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition flex items-center">
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition flex items-center cursor-pointer">
                                     <i class="fas fa-sign-out-alt w-5"></i> Logout
                                 </button>
                             </form>

@@ -16,7 +16,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {{-- Filter --}}
         <div class="p-4 md:p-6 border-b border-gray-100">
-            <form action="{{ route('admin.speakers.index') }}" method="GET" x-data>
+            <form action="{{ route('admin.speakers.index') }}" method="GET" x-data data-admin-filter-form>
                 <div class="flex flex-col md:flex-row gap-3">
                     <x-input-field 
                         name="search" 
@@ -24,15 +24,16 @@
                         :value="request('search')" 
                         placeholder="Cari nama, email, atau perusahaan..."
                         class="flex-1"
-                        x-on:input.debounce.500ms="$el.closest('form').submit()"
                         :showError="false"
                     />
-                    @if(request()->filled('search'))
-                        <a href="{{ route('admin.speakers.index') }}" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium text-center">Reset</a>
-                    @endif
+                    <button type="button" data-admin-filter-reset class="px-4 py-2 rounded-lg text-sm font-medium text-center border transition {{ request()->filled('search') ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100 cursor-pointer' : 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed' }}">
+                        {{ request()->filled('search') ? 'Reset' : 'Auto Filter' }}
+                    </button>
                 </div>
             </form>
         </div>
+
+        <div data-admin-filter-results>
 
         {{-- Desktop Table --}}
         <div class="hidden md:block overflow-x-auto">
@@ -109,8 +110,10 @@
         </div>
         
         @if($speakers->hasPages())
-            <div class="p-4 bg-gray-50 border-t border-gray-100">{{ $speakers->withQueryString()->links() }}</div>
+            <div class="p-4 bg-gray-50 border-t border-gray-100" data-admin-pagination>{{ $speakers->withQueryString()->links() }}</div>
         @endif
+
+        </div>
     </div>
 
     {{-- Delete Modal --}}
@@ -148,5 +151,126 @@ document.addEventListener('alpine:init', () => {
         }
     }));
 });
+</script>
+
+<script>
+(() => {
+    const form = document.querySelector('[data-admin-filter-form]');
+    const results = document.querySelector('[data-admin-filter-results]');
+    const resetButton = document.querySelector('[data-admin-filter-reset]');
+
+    if (!form || !results) {
+        return;
+    }
+
+    let searchTimer = null;
+
+    const buildUrl = () => {
+        const params = new URLSearchParams();
+        const formData = new FormData(form);
+
+        for (const [key, value] of formData.entries()) {
+            const normalized = String(value ?? '').trim();
+            if (normalized !== '') {
+                params.set(key, value);
+            }
+        }
+
+        return `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+    };
+
+    const hasActiveFilters = () => {
+        const formData = new FormData(form);
+
+        for (const [key, value] of formData.entries()) {
+            const normalized = String(value ?? '').trim();
+
+            if (normalized !== '') {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    const syncActionButton = () => {
+        if (!resetButton) {
+            return;
+        }
+
+        const active = hasActiveFilters();
+
+        resetButton.disabled = !active;
+        resetButton.className = `px-4 py-2 rounded-lg text-sm font-medium text-center border transition ${active ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100 cursor-pointer' : 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'}`;
+        resetButton.textContent = active ? 'Reset' : 'Auto Filter';
+    };
+
+    const replaceResults = async (url) => {
+        const response = await fetch(url, {
+            headers: {
+                'Accept': 'text/html',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Gagal memuat data.');
+        }
+
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const nextResults = doc.querySelector('[data-admin-filter-results]');
+
+        if (nextResults) {
+            results.innerHTML = nextResults.innerHTML;
+        }
+
+        window.history.replaceState({}, '', url);
+        syncActionButton();
+    };
+
+    const resetFilters = () => {
+        const searchInput = form.querySelector('[name="search"]');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+
+        syncActionButton();
+        replaceResults(window.location.pathname).catch((error) => console.error(error));
+    };
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        replaceResults(buildUrl()).catch((error) => console.error(error));
+    });
+
+    form.addEventListener('input', (event) => {
+        if (!event.target || event.target.name !== 'search') {
+            return;
+        }
+
+        window.clearTimeout(searchTimer);
+        searchTimer = window.setTimeout(() => {
+            replaceResults(buildUrl()).catch((error) => console.error(error));
+        }, 350);
+    });
+
+    syncActionButton();
+
+    if (resetButton) {
+        resetButton.addEventListener('click', resetFilters);
+    }
+
+    results.addEventListener('click', (event) => {
+        const paginationLink = event.target.closest('[data-admin-pagination] a');
+
+        if (!paginationLink) {
+            return;
+        }
+
+        event.preventDefault();
+        replaceResults(paginationLink.href).catch((error) => console.error(error));
+    });
+})();
 </script>
 @endsection

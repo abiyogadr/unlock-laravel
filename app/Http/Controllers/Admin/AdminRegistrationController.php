@@ -20,14 +20,22 @@ class AdminRegistrationController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Event::withCount('registrations'); // Hitung jumlah pendaftar
+        $query = Event::withCount([
+            'registrations',
+            'registrations as paid_registrations_count' => function ($registrationQuery) {
+                $registrationQuery->where('payment_status', 'success');
+            },
+            'registrations as pending_registrations_count' => function ($registrationQuery) {
+                $registrationQuery->where('payment_status', 'pending');
+            },
+        ]); // Hitung jumlah pendaftar
 
         // Filter Status Event
         if ($request->has('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
 
-        $events = $query->latest('date_start')->paginate(10);
+        $events = $query->latest('date_start')->paginate(10)->withQueryString();
 
         // Tambahkan data nominal pendapatan per event (Manual Calculation karena butuh relasi packet)
         // Jika database besar, sebaiknya pakai Raw SQL / Subquery biar ringan. 
@@ -51,14 +59,42 @@ class AdminRegistrationController extends Controller
     {
         // Gunakan 'registration_status' agar konsisten dengan kolom di DB Anda
         $status = $request->get('status', 'all');
+        $packet = $request->get('packet', 'all');
+        $attendance = $request->get('attendance', 'all');
+        $certificate = $request->get('certificate', 'all');
         $search = $request->get('search');
 
-        $query = Registration::with(['user', 'packet'])
+        $event->load('packets');
+
+        $query = Registration::with(['user', 'packet', 'certificate'])
             ->where('event_id', $event->id);
 
         // Filter Status Pendaftaran
         if ($status !== 'all') {
             $query->where('registration_status', $status);
+        }
+
+        if ($packet !== 'all') {
+            $query->where('packet_id', $packet);
+        }
+
+        if ($attendance !== 'all') {
+            if ($attendance === 'attended') {
+                $query->where('is_attended', true);
+            } elseif ($attendance === 'not_attended') {
+                $query->where(function ($attendanceQuery) {
+                    $attendanceQuery->whereNull('is_attended')
+                        ->orWhere('is_attended', false);
+                });
+            }
+        }
+
+        if ($certificate !== 'all') {
+            if ($certificate === 'generated') {
+                $query->whereHas('certificate');
+            } elseif ($certificate === 'not_generated') {
+                $query->whereDoesntHave('certificate');
+            }
         }
 
         // Pencarian Peserta (Nama, Email, atau Kode)
