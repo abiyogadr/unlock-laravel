@@ -16,6 +16,15 @@ class HandleInertiaRequests extends Middleware
      */
     protected $rootView = 'ecourse.inertia';
 
+    public function rootView(Request $request): string
+    {
+        if ($request->is('upanel/landing-pages*')) {
+            return 'landing-page.inertia';
+        }
+
+        return $this->rootView;
+    }
+
     /**
      * Determines the current asset version.
      *

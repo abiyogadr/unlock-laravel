@@ -199,3 +199,6 @@ Route::get('/policy', function () {return view('pages.policy');})->name('policy'
 /**E-COURSE */
 // Load E-Course Inertia routes
 require base_path('routes/ecourse-inertia.php');
+
+/**LANDING PAGE */
+require base_path('routes/landing-page.php');

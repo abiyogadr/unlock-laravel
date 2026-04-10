@@ -10,6 +10,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/ecourse/main-inertia.js',
+                'resources/js/landing-page/main.js',
                 'resources/js/certificate.js',
                 'resources/js/registration.js',
             ],
