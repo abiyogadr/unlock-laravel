@@ -268,6 +268,14 @@ class AdminLandingPageController extends Controller
 
     private function authorizeOwner(LandingPage $landingPage): void
     {
-        abort_if($landingPage->user_id !== auth()->id(), 403, 'Anda tidak memiliki akses.');
+        if ($landingPage->user_id === auth()->id()) {
+            return;
+        }
+
+        if (auth()->user()?->isAdmin()) {
+            return;
+        }
+
+        abort_if(true, 403, 'Anda tidak memiliki akses.');
     }
 }
