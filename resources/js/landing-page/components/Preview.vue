@@ -17,7 +17,7 @@
             </div>
           </div>
 
-          <h1 v-if="data.title" :style="titleStyle" class="mb-1.5 leading-tight">{{ data.title }}</h1>
+          <h1 v-if="data.title" :style="titleStyle" class="mb-5 leading-tight">{{ data.title }}</h1>
           <div v-if="data.bio" :style="bioStyle" class="mb-4 leading-relaxed">{{ data.bio }}</div>
 
           <div class="space-y-3">

@@ -86,7 +86,7 @@
                     </div>
                 @endif
 
-                <h1 style="text-align:{{ $s['title_align'] ?? 'center' }};font-size:{{ $sizeMap[$s['title_size'] ?? '2xl'] }};color:{{ $s['title_color'] ?? '#1f2937' }};font-weight:{{ ($s['title_bold'] ?? true) ? '700' : '400' }};margin-bottom:0.25rem">
+                <h1 style="text-align:{{ $s['title_align'] ?? 'center' }};font-size:{{ $sizeMap[$s['title_size'] ?? '2xl'] }};color:{{ $s['title_color'] ?? '#1f2937' }};font-weight:{{ ($s['title_bold'] ?? true) ? '700' : '400' }};margin-bottom:1.25rem">
                     {{ $page->title }}
                 </h1>
 
