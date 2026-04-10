@@ -86,12 +86,12 @@
                     </div>
                 @endif
 
-                <h1 style="text-align:{{ $s['title_align'] ?? 'center' }};font-size:{{ $sizeMap[$s['title_size'] ?? '2xl'] }};color:{{ $s['title_color'] ?? '#1f2937' }};font-weight:{{ ($s['title_bold'] ?? true) ? '700' : '400' }};margin-bottom:0.375rem">
+                <h1 style="text-align:{{ $s['title_align'] ?? 'center' }};font-size:{{ $sizeMap[$s['title_size'] ?? '2xl'] }};color:{{ $s['title_color'] ?? '#1f2937' }};font-weight:{{ ($s['title_bold'] ?? true) ? '700' : '400' }};margin-bottom:0.25rem">
                     {{ $page->title }}
                 </h1>
 
                 @if($page->bio)
-                    <p style="text-align:{{ $s['bio_align'] ?? 'center' }};font-size:{{ $sizeMap[$s['bio_size'] ?? 'sm'] }};color:{{ $s['bio_color'] ?? '#6b7280' }};font-weight:{{ ($s['bio_bold'] ?? false) ? '700' : '400' }};margin-bottom:1.5rem;line-height:1.6">
+                    <p style="text-align:{{ $s['bio_align'] ?? 'center' }};font-size:{{ $sizeMap[$s['bio_size'] ?? 'sm'] }};color:{{ $s['bio_color'] ?? '#6b7280' }};font-weight:{{ ($s['bio_bold'] ?? false) ? '700' : '400' }};margin-bottom:1rem;line-height:1.6">
                         {{ $page->bio }}
                     </p>
                 @endif
