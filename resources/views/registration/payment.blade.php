@@ -39,16 +39,27 @@
             {{-- Total Price --}}
             <div class="bg-white rounded-xl p-4 mb-4 border border-yellow-100">
                 <div class="flex justify-between items-center">
-                    <span class="text-xs sm:text-sm font-semibold text-gray-600">Total Pembayaran:</span>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-600">Harga Paket:</span>
+                    <span class="font-semibold text-gray-900">Rp. {{ number_format($registration->price, 2, ',', '.') }}</span>
+                </div>
+                @if($registration->voucher_discount > 0)
+                    <div class="flex justify-between items-center mt-3">
+                        <span class="text-xs sm:text-sm font-semibold text-gray-600">Diskon Voucher:</span>
+                        <span class="font-semibold text-green-600">- Rp. {{ number_format($registration->voucher_discount, 2, ',', '.') }}</span>
+                    </div>
+                @endif
+                @if($event->payment_unique_code)
+                    <div class="flex justify-between items-center mt-3">
+                        <span class="text-xs sm:text-sm font-semibold text-gray-600">Kode Unik:</span>
+                        <span class="font-semibold text-gray-900">Rp. {{ number_format($event->payment_unique_code, 2, ',', '.') }}</span>
+                    </div>
+                @endif
+                <div class="flex justify-between items-center mt-4 pt-4 border-t border-yellow-100">
+                    <span class="text-sm font-bold text-gray-800">Total Pembayaran:</span>
                     <span class="text-xl sm:text-2xl font-bold text-orange-600">
-                        Rp. {{ number_format($packet->price + ($event->payment_unique_code ?? 0), 2, ',', '.') }}
+                        Rp. {{ number_format(max(0, $registration->price - ($registration->voucher_discount ?? 0)) + ($event->payment_unique_code ?? 0), 2, ',', '.') }}
                     </span>
                 </div>
-                @if($event->payment_unique_code)
-                    <p class="text-xs text-gray-500 mt-1 text-right">
-                        (Harga + Kode Unik: {{ $event->payment_unique_code }})
-                    </p>
-                @endif
             </div>
 
             {{-- Payment Description --}}
