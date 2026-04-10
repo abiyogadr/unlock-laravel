@@ -52,6 +52,28 @@ class VoucherService
             if (!empty($query['course_slug'])) {
                 $course = \App\Models\Ecourse\Course::where('slug', $query['course_slug'])->first();
             }
+        } elseif ($type === 'event_packet') {
+            // Webinar event registration: voucher bisa dikunci ke Packet atau Event tertentu
+            $packet = \App\Models\Packet::findOrFail($query['packet_id']);
+            $event  = \App\Models\Event::findOrFail($query['event_id']);
+            $subtotal  = (float) $packet->price;
+            $itemType  = \App\Models\Packet::class;
+            $itemId    = $packet->id;
+
+            return [
+                'type'       => $type,
+                'course'     => null,
+                'package'    => $packet,
+                'event'      => $event,
+                'itemType'   => $itemType,
+                'itemId'     => $itemId,
+                'subtotal'   => $subtotal,
+                // candidates memungkinkan voucher dikunci ke Packet ATAU Event
+                'candidates' => [
+                    ['type' => \App\Models\Packet::class, 'id' => $packet->id],
+                    ['type' => \App\Models\Event::class,  'id' => $event->id],
+                ],
+            ];
         } else {
             throw new \InvalidArgumentException('Unsupported payment type');
         }
@@ -150,7 +172,8 @@ class VoucherService
         }
 
         // collect all types+ids that this payment context matches
-        $candidates = [
+        // context dapat menyertakan 'candidates' opsional (misal untuk event+packet)
+        $candidates = $context['candidates'] ?? [
             ['type' => $context['itemType'], 'id' => $context['itemId']],
         ];
 

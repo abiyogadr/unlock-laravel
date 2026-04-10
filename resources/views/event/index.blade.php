@@ -93,67 +93,7 @@
         {{-- Event Cards --}}
         <div id="events-container" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             @forelse($events as $event)
-                <article
-                    class="group bg-white rounded-2xl border border-gray-100 shadow-sm
-                        hover:shadow-xl hover:-translate-y-1 transition-all duration-300
-                        overflow-hidden flex flex-col">
-
-                    {{-- KV --}}
-                    <div class="relative h-44 bg-gray-100 overflow-hidden">
-                        @if($event->kv_path)
-                            <img src="{{ asset('storage/'.$event->kv_path) }}"
-                                alt="{{ $event->event_title }}"
-                                class="w-full h-full object-cover transition-transform duration-500
-                                        group-hover:scale-105">
-                        @else
-                            <div class="w-full h-full flex flex-col items-center justify-center
-                                        bg-gradient-to-br from-gray-50 to-gray-200">
-                                <i class="fas fa-image text-3xl text-gray-300 mb-2"></i>
-                                <span class="text-xs text-gray-400">Tidak ada gambar</span>
-                            </div>
-                        @endif
-
-                        {{-- Status badge on image --}}
-                        <span class="absolute top-3 left-3 px-2.5 py-1 text-[11px] font-semibold rounded-full
-                                    {{ $event->status === 'open'
-                                        ? 'bg-green-500/90 text-white'
-                                        : 'bg-gray-500/90 text-white' }}">
-                            {{ strtoupper($event->status) }}
-                        </span>
-                    </div>
-
-                    <div class="p-5 flex flex-col flex-grow">
-                        <h3 class="text-base font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition">
-                            {{ $event->event_title }}
-                        </h3>
-
-                        <div class="text-xs text-gray-500 mb-3 space-y-1.5">
-                            <div class="flex items-center">
-                                <i class="fas fa-calendar-alt w-4 mr-2"></i>
-                                <span>{{ $event->date_start->format('d M Y') }}</span>
-                            </div>
-                            <div class="flex items-center">
-                                <i class="fas fa-clock w-4 mr-2"></i>
-                                <span>{{ $event->time_start }} – {{ $event->time_end }} WIB</span>
-                            </div>
-                        </div>
-
-                        <div class="text-xs text-gray-600 mb-5 flex items-start">
-                            <i class="fas fa-microphone w-4 mr-2 mt-0.5"></i>
-                            <span class="line-clamp-2">
-                                {{ $event->speakers->pluck('speaker_name')->implode(', ') }}
-                        </div>
-
-                        <div class="mt-auto">
-                            <a href="{{ route('event.show', $event->event_code) }}"
-                            class="block w-full text-center text-sm font-semibold
-                                    bg-secondary text-white py-2.5 rounded-xl
-                                    hover:bg-orange-600 transition">
-                                Lihat Detail
-                            </a>
-                        </div>
-                    </div>
-                </article>
+                <x-event-card :event="$event" badge-position="left" media-class="h-44" />
             @empty
                 <div class="col-span-full text-center text-gray-500 py-16">
                     <div class="max-w-sm mx-auto bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">

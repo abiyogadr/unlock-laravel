@@ -264,28 +264,10 @@
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                     <i class="fas fa-check-circle text-primary mr-3"></i> Konfirmasi Data
                 </h3>
-                
-                <div class="space-y-6">
-                    {{-- Section Event --}}
-                    <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
-                        <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">Detail Event</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-4 text-sm">
-                            <div>
-                                <div class="text-gray-500 text-xs uppercase tracking-wide">Event</div>
-                                <div class="font-semibold text-gray-900" x-text="getLabel(form.event_id, options.events)"></div>
-                            </div>
-                            <div>
-                                <div class="text-gray-500 text-xs uppercase tracking-wide">Paket</div>
-                                <div class="font-semibold text-gray-900" x-text="getLabel(form.packet_id, packets)"></div>
-                            </div>
-                            <div>
-                                <div class="text-gray-500 text-xs uppercase tracking-wide">Biaya Pendaftaran</div>
-                                <div class="font-bold text-secondary text-lg" x-text="priceDisplay"></div>
-                            </div>
-                        </div>
-                    </div>
 
-                    {{-- Section Data Diri --}}
+                <div class="space-y-6">
+
+                    {{-- 1. DATA DIRI PESERTA (tampil pertama) --}}
                     <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
                         <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">Data Diri Peserta</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4 text-sm">
@@ -318,12 +300,107 @@
                             <div>
                                 <div class="text-gray-500 text-xs uppercase tracking-wide">Domisili</div>
                                 <div class="font-medium text-gray-900">
-                                    <span x-text="getLabel(form.city, cities)"></span>, 
+                                    <span x-text="getLabel(form.city, cities)"></span>,
                                     <span x-text="getLabel(form.province, options.provinces)"></span>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    {{-- 2. DETAIL PEMBAYARAN (tampil kedua) --}}
+                    <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                        <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">Detail Pembayaran</h4>
+
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Event</span>
+                                <span class="font-medium text-gray-900 text-right max-w-[65%]" x-text="getLabel(form.event_id, options.events)"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Paket</span>
+                                <span class="font-medium text-gray-900" x-text="getLabel(form.packet_id, packets)"></span>
+                            </div>
+                            <div class="flex justify-between pt-3 border-t border-gray-200">
+                                <span class="text-gray-600">Subtotal</span>
+                                <span class="font-semibold text-gray-900" x-text="priceDisplay"></span>
+                            </div>
+
+                            {{-- Voucher & total: hanya tampil jika harga paket > 0 --}}
+                            <template x-if="packetPrice > 0">
+                                <div class="space-y-3">
+
+                                    {{-- Input voucher (disembunyikan jika sudah applied) --}}
+                                    <div x-show="!voucher.applied" class="pt-1">
+                                        <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-3 items-end">
+                                            <x-input-field 
+                                                name="voucher_code"
+                                                label="Kode Voucher (Opsional)"
+                                                type="text"
+                                                x-model="voucher.code"
+                                                @input="voucher.code = $event.target.value.toUpperCase()"
+                                                @keydown.enter.prevent="applyVoucher()"
+                                                class="mb-0"
+                                            />
+
+                                            <button
+                                                type="button"
+                                                @click="applyVoucher()"
+                                                :disabled="voucher.loading || !voucher.code"
+                                                class="w-full lg:w-auto flex items-center justify-center px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90 disabled:opacity-50 transition whitespace-nowrap"
+                                            >
+                                                <span x-show="!voucher.loading">Terapkan</span>
+                                                <span x-show="voucher.loading"><i class="fas fa-spinner fa-spin"></i></span>
+                                            </button>
+                                        </div>
+                                        <p x-show="voucher.error" class="mt-1.5 text-xs text-red-600 font-medium flex items-center gap-1">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            <span x-text="voucher.error"></span>
+                                        </p>
+                                    </div>
+
+                                    {{-- Badge voucher aktif --}}
+                                    <div x-show="voucher.applied" class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center shrink-0">
+                                                <i class="fas fa-check text-green-600 text-xs"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-xs text-green-600 font-semibold uppercase tracking-wide">Voucher Aktif</div>
+                                                <div class="text-sm font-bold text-green-900 font-mono" x-text="voucher.applied?.voucher?.code"></div>
+                                            </div>
+                                        </div>
+                                        <button type="button" @click="removeVoucher()" class="text-xs text-red-500 hover:text-red-700 font-semibold flex items-center gap-1 transition">
+                                            <i class="fas fa-times"></i> Hapus
+                                        </button>
+                                    </div>
+
+                                    {{-- Baris diskon --}}
+                                    <div x-show="voucher.applied" class="flex justify-between text-green-700">
+                                        <span class="flex items-center gap-1">
+                                            <i class="fas fa-tag text-xs"></i> Diskon Voucher
+                                        </span>
+                                        <span class="font-semibold" x-text="'- Rp ' + Number(voucher.applied?.discount ?? 0).toLocaleString('id-ID')"></span>
+                                    </div>
+
+                                    {{-- Total bayar --}}
+                                    <div class="flex justify-between items-center pt-3 border-t-2 border-gray-300">
+                                        <span class="font-bold text-gray-800 text-base">Total Bayar</span>
+                                        <span class="font-bold text-secondary text-2xl" x-text="finalPriceDisplay()"></span>
+                                    </div>
+
+                                </div>
+                            </template>
+
+                            {{-- Gratis --}}
+                            <template x-if="packetPrice === 0">
+                                <div class="flex justify-between items-center pt-3 border-t border-gray-200">
+                                    <span class="font-bold text-gray-800">Total Bayar</span>
+                                    <span class="font-bold text-green-600 text-xl">GRATIS</span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 

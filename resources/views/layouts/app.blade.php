@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="app-base" content="{{ rtrim(config('app.url'), '/') }}">
     <meta name="description" content="@yield('meta_description', 'Unlock Indonesia: Platform Webinar Bersertifikat. Tingkatkan skill profesional Anda bersama praktisi industri terbaik. Daftar sekarang untuk akses materi eksklusif dan e-sertifikat nasional!')">
     <title>@yield('title', 'Unlock - Webinar Event')</title>

@@ -80,6 +80,7 @@ Route::middleware(['auth'])->group(function () {
     // --- REGISTRATION FLOW ---
     Route::get('/registration', [RegistrationController::class, 'create'])->name('registration.create');
     Route::post('/registration', [RegistrationController::class, 'store'])->name('registration.store');
+    Route::post('/registration/apply-voucher', [RegistrationController::class, 'applyEventVoucher'])->name('registration.applyVoucher');
     Route::get('/registration/status/{status}', [RegistrationController::class, 'status'])->name('registration.status');
     Route::get('/registration/payment/{registration}', [RegistrationController::class, 'payment'])->name('registration.payment');
 

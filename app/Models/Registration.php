@@ -30,6 +30,8 @@ class Registration extends Model
         'payment_status',
         'paid_at',
         'snap_token',
+        'voucher_code',
+        'voucher_discount',
         'flag_sub',
         'screenshot_follow_ig',
         'screenshot_follow_tiktok',

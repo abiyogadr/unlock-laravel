@@ -33,7 +33,16 @@ document.addEventListener('alpine:init', () => {
         errors: {},
         
         // State Validasi Upload (BARU)
-        uploads: {}, 
+        uploads: {},
+
+        // Voucher state
+        voucher: {
+            code: '',
+            loading: false,
+            applied: null, // summary object dari server
+            error: '',
+        },
+        packetPrice: 0, // harga numerik paket yang dipilih (raw)
 
         // Config Requirements
         requirementsConfig: {
@@ -54,13 +63,16 @@ document.addEventListener('alpine:init', () => {
                 this.priceDisplay = 'Rp 0';
                 this.packetDescription = '';
                 this.activeRequirements = {};
-                this.uploads = {}; // Reset upload jika event ganti
+                this.uploads = {};
+                this.voucher = { code: '', loading: false, applied: null, error: '' };
+                this.packetPrice = 0;
                 if(val) this.fetchPackets(val);
             });
 
             this.$watch('form.packet_id', (val) => {
                 this.updatePacketDetails(val);
-                this.uploads = {}; // Reset upload jika paket ganti
+                this.uploads = {};
+                this.voucher = { code: '', loading: false, applied: null, error: '' };
             });
 
             this.$watch('form.province', (val) => {
@@ -127,7 +139,8 @@ document.addEventListener('alpine:init', () => {
         updatePacketDetails(packetId) {
             const packet = this.packets.find(p => p.value == packetId);
             if (!packet) return;
-            this.priceDisplay = `Rp ${Number(packet.price).toLocaleString('id-ID')}`;
+            this.packetPrice    = Number(packet.price);
+            this.priceDisplay   = `Rp ${Number(packet.price).toLocaleString('id-ID')}`;
             this.packetDescription = packet.desc ? `<strong>Detail Paket:</strong><br>${packet.desc}` : '';
 
             // Map Requirements
@@ -197,6 +210,48 @@ document.addEventListener('alpine:init', () => {
 
             return isValid;
         },
+
+        // ---- VOUCHER METHODS ----
+        finalPriceDisplay() {
+            const discount = parseFloat(this.voucher.applied?.discount ?? 0);
+            const final    = Math.max(0, this.packetPrice - discount);
+            return 'Rp ' + Number(final).toLocaleString('id-ID');
+        },
+
+        async applyVoucher() {
+            if (!this.voucher.code || !this.form.packet_id || !this.form.event_id) return;
+            this.voucher.loading = true;
+            this.voucher.error   = '';
+            this.voucher.applied = null;
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+                const res   = await fetch('/registration/apply-voucher', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+                    body: JSON.stringify({
+                        code:      this.voucher.code,
+                        packet_id: this.form.packet_id,
+                        event_id:  this.form.event_id,
+                    }),
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    this.voucher.applied = data.summary;
+                } else {
+                    this.voucher.error = data.message || 'Voucher tidak valid.';
+                }
+            } catch {
+                this.voucher.error = 'Gagal menghubungi server.';
+            }
+            this.voucher.loading = false;
+        },
+
+        removeVoucher() {
+            this.voucher.applied = null;
+            this.voucher.code    = '';
+            this.voucher.error   = '';
+        },
+        // ---- END VOUCHER METHODS ----
 
         nextStep() {
             if (!this.validateStep(this.currentStep)) {

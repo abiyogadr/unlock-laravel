@@ -17,9 +17,18 @@ use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Mail\RegistrationSuccessMail;
+use App\Services\VoucherService;
+use Illuminate\Support\Facades\DB;
 
 class RegistrationController extends Controller
 {
+    protected VoucherService $vouchers;
+
+    public function __construct(VoucherService $vouchers)
+    {
+        $this->vouchers = $vouchers;
+    }
+
     public function create(Request $request)
     {   
         if ($user = Auth::user()){
@@ -117,6 +126,40 @@ class RegistrationController extends Controller
         return response()->json($regencies);
     }
 
+    /**
+     * AJAX: validasi & hitung diskon voucher untuk registrasi event.
+     * Mendukung voucher khusus Packet tertentu, Event tertentu, atau user tertentu.
+     */
+    public function applyEventVoucher(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'code'      => 'required|string|max:100',
+            'packet_id' => 'required|exists:packets,id',
+            'event_id'  => 'required|exists:events,id',
+        ]);
+
+        $user = Auth::user();
+        if (! $user) {
+            return response()->json(['message' => 'Anda harus login terlebih dahulu.'], 401);
+        }
+
+        try {
+            $ctx     = $this->vouchers->resolvePaymentContext([
+                'type'      => 'event_packet',
+                'packet_id' => $validated['packet_id'],
+                'event_id'  => $validated['event_id'],
+            ]);
+            $summary = $this->vouchers->applyToPaymentContext($validated['code'], $user, $ctx);
+
+            return response()->json(['success' => true, 'summary' => $summary]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return response()->json(['message' => 'Kode voucher tidak ditemukan.'], 422);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -132,6 +175,7 @@ class RegistrationController extends Controller
             'profession' => 'required|string|max:255',
             'channel_information' => 'required|array',
             'channel_information.*' => 'required|max:255',
+            'voucher_code'  => 'nullable|string|max:100',
             'upload_proofs'   => 'nullable|array',
             'upload_proofs.*' => 'nullable|image|mimes:jpg,jpeg,png|max:2048', 
         ],
@@ -176,6 +220,31 @@ class RegistrationController extends Controller
             return back()->withErrors('Paket tidak valid untuk event ini');
         }
 
+        // VOUCHER PROCESSING
+        $voucherCode     = null;
+        $voucherDiscount = 0.0;
+        $voucherSummary  = null;
+        $voucherCtx      = null;
+
+        if ($request->filled('voucher_code') && $packet->price > 0) {
+            try {
+                $voucherCtx    = $this->vouchers->resolvePaymentContext([
+                    'type'      => 'event_packet',
+                    'packet_id' => $packet->id,
+                    'event_id'  => $event->id,
+                ]);
+                $voucherSummary  = $this->vouchers->applyToPaymentContext(
+                    $request->input('voucher_code'),
+                    Auth::user(),
+                    $voucherCtx
+                );
+                $voucherCode     = $voucherSummary['voucher']['code'];
+                $voucherDiscount = $voucherSummary['discount'];
+            } catch (\Exception $e) {
+                return back()->withErrors(['voucher_code' => $e->getMessage()])->withInput();
+            }
+        }
+
         // 3. SANITASI WHATSAPP
         $whatsapp = $request->whatsapp;
         $whatsapp = preg_replace('/^0/', '', $whatsapp);
@@ -216,6 +285,8 @@ class RegistrationController extends Controller
             'profession'  => $request->profession,
             'channel_information' => $request->channel_information,
             'price'       => $packet->price,
+            'voucher_code'     => $voucherCode,
+            'voucher_discount' => $voucherDiscount,
             'payment_unique_code' => $event->payment_unique_code,
             'payment_status' => 'pending',
             'registration_status' => 'pending',
@@ -267,8 +338,25 @@ class RegistrationController extends Controller
             ]);
         }
 
-        // 6. REDIRECT based on price
-        if ($packet->price > 0) {
+        // MARK VOUCHER SEBAGAI DIGUNAKAN
+        if ($voucherSummary && isset($voucherSummary['voucher'])) {
+            try {
+                DB::transaction(function () use ($voucherSummary, $voucherCtx, $registration) {
+                    $this->vouchers->markAsUsed(
+                        \App\Models\Voucher::find($voucherSummary['voucher']['id']),
+                        Auth::user(),
+                        $registration,
+                        array_merge($voucherSummary, ['context' => $voucherCtx])
+                    );
+                });
+            } catch (\Exception $e) {
+                Log::warning('Gagal mencatat penggunaan voucher: ' . $e->getMessage());
+            }
+        }
+
+        // 6. REDIRECT based on final price after voucher
+        $finalPrice = max(0, $packet->price - $voucherDiscount);
+        if ($finalPrice > 0) {
             // Redirect to payment page for paid packages
             return redirect()->route('registration.payment', [
                 'registration' => $registration->id,
@@ -276,7 +364,7 @@ class RegistrationController extends Controller
                 'packet' => $packet
             ]);
         } else {
-            // Update status pendaftaran gratis
+            // Update status pendaftaran gratis / fully discounted
             $registration->update(['payment_status' => 'success']);
 
             // KIRIM EMAIL KE PESERTA
@@ -332,30 +420,45 @@ class RegistrationController extends Controller
         Config::$isSanitized = config('midtrans.is_sanitized');
         Config::$is3ds = config('midtrans.is_3ds');
         
+        // Hitung harga akhir setelah diskon voucher
+        $finalPayable = max(0, (int) $registration->price - (int) ($registration->voucher_discount ?? 0));
+        $grossAmount  = $finalPayable + (int) $event->payment_unique_code;
+
+        $itemDetails = [
+            [
+                'id'       => $packet->id,
+                'price'    => (int) $registration->price,
+                'quantity' => 1,
+                'name'     => $packet->packet_name . '-' . $event->event_title,
+            ],
+            [
+                'id'       => 'unique_code',
+                'price'    => (int) $event->payment_unique_code,
+                'quantity' => 1,
+                'name'     => 'Kode Unik Pembayaran',
+            ],
+        ];
+
+        if ((int) ($registration->voucher_discount ?? 0) > 0) {
+            $itemDetails[] = [
+                'id'       => 'voucher_discount',
+                'price'    => -(int) $registration->voucher_discount,
+                'quantity' => 1,
+                'name'     => 'Diskon Voucher (' . ($registration->voucher_code ?? '') . ')',
+            ];
+        }
+
         $params = [
             'transaction_details' => [
-                'order_id' => $registration->registration_code,
-                'gross_amount' => (int) $registration->price + $event->payment_unique_code ,
+                'order_id'     => $registration->registration_code,
+                'gross_amount' => $grossAmount,
             ],
             'customer_details' => [
                 'first_name' => $registration->name,
-                'email' => $registration->email,
-                'phone' => $registration->whatsapp,
+                'email'      => $registration->email,
+                'phone'      => $registration->whatsapp,
             ],
-            'item_details' => [
-                [
-                'id' => $packet->id,
-                'price' => (int) $registration->price,
-                'quantity' => 1,
-                'name' => $packet->packet_name . '-' . $event->event_title,
-                ],
-                [
-                'id' => 'unique_code',
-                'price' => (int) $event->payment_unique_code,
-                'quantity' => 1,
-                'name' => 'Kode Unik Pembayaran',
-                ]
-            ],
+            'item_details' => $itemDetails,
             'callbacks' => [
                 'finish'   => route('registration.status', ['status' => 'success']) . '?order_id=' . $registration->registration_code,
                 'unfinish' => route('registration.status', ['status' => 'pending']) . '?order_id=' . $registration->registration_code,
