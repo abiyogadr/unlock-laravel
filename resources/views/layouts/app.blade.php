@@ -21,7 +21,7 @@
     <!-- Navbar -->
     <nav class="sticky top-0 z-50 bg-white shadow-sm w-full">
         <!-- Pembungkus konten navbar agar sejajar dengan isi web -->
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 {{ request()->is('upanel*') ? 'max-w-full' : 'max-w-7xl' }} py-4 flex justify-between items-center">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 {{ request()->is('upanel*') ? 'max-w-full' : 'max-w-7xl' }} py-3 flex justify-between items-center">
             
             <!-- LOGO -->
             <a href="{{ url('/') }}" class="inline-block">

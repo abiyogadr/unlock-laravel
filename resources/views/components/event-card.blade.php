@@ -36,7 +36,12 @@
         <div class="text-xs text-gray-500 mb-3 space-y-1.5">
             <div class="flex items-center">
                 <i class="fas fa-calendar-alt w-4 mr-2"></i>
-                <span>{{ $event->date_start->format('d M Y') }}</span>
+                <span>
+                    {{ $event->date_start->format('d M Y') }}
+                    @if($event->date_end && $event->date_end->format('Y-m-d') !== $event->date_start->format('Y-m-d'))
+                        – {{ $event->date_end->format('d M Y') }}
+                    @endif
+                </span>
             </div>
             <div class="flex items-center">
                 <i class="fas fa-clock w-4 mr-2"></i>
