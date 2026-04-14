@@ -31,14 +31,20 @@ class LandingPagePublicController extends Controller
             abort(404);
         }
 
-        LinkClick::create([
-            'landing_page_id'      => $page->id,
-            'landing_page_link_id' => $link->id,
-            'ip_address'           => $request->ip(),
-            'user_agent'           => mb_substr($request->userAgent() ?? '', 0, 500),
-            'referer'              => mb_substr($request->header('referer', ''), 0, 2048) ?: null,
-            'clicked_at'           => now(),
-        ]);
+        $referer = $request->header('referer', '');
+        $refererPath = parse_url($referer, PHP_URL_PATH) ?: '';
+        $shouldTrack = ! str_starts_with($refererPath, '/upanel');
+
+        if ($shouldTrack) {
+            LinkClick::create([
+                'landing_page_id'      => $page->id,
+                'landing_page_link_id' => $link->id,
+                'ip_address'           => $request->ip(),
+                'user_agent'           => mb_substr($request->userAgent() ?? '', 0, 500),
+                'referer'              => mb_substr($referer, 0, 2048) ?: null,
+                'clicked_at'           => now(),
+            ]);
+        }
 
         $targetUrl = $request->integer('slot') === 2
             ? ($link->url_2 ?: $link->url)

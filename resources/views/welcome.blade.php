@@ -5,142 +5,148 @@
 @section('content')
 
     <!-- 1. Hero Section (Compact Slider) -->
-    <section class="w-full bg-gradient-to-br from-primary to-purple-800 text-white py-12 md:py-18">
-        <div class="container mx-auto px-4 max-w-7xl">
-            <div class="swiper heroSwiper overflow-hidden">
-                <div class="swiper-wrapper">
-                    
-                    {{-- Slide 1: Event Terbaru --}}
-                    @if($events->first())
-                    <div class="swiper-slide">
-                        <div class="flex flex-col lg:flex-row items-center gap-2">
-                            <div class="lg:w-7/12 text-center lg:text-left">
-                                <h1 class="text-lg md:text-3xl font-bold mb-4 md:mb-10 opacity-90 leading-relaxed">
-                                    Unlock.co.id menghadirkan webinar dan E-Course terbaik dengan praktisi industri.
-                                </h1>
-                                <p class="text-base md:text-lg font-light mb-6 opacity-90">
-                                    Daftarkan dirimu segera di webinar terbaru kami dan tingkatkan skill profesionalmu bersama mentor berpengalaman.
-                                </p>
-                                <div class="flex flex-wrap justify-center lg:justify-start gap-3 mb-6">
-                                    {{-- Tombol Daftar Sekarang --}}
-                                    @php
-                                        $latestEvent = $events->where('status', 'open')->first() 
-                                                    ?? $events->sortByDesc('date_start')->first();
-                                    @endphp
-                                    <a href="{{ route('event.show', $latestEvent->event_code) }}"
-                                    class="inline-flex items-center px-6 py-3 bg-secondary text-white text-sm font-bold rounded-xl shadow-lg hover:bg-orange-600 transition">
-                                        Daftar Sekarang 
-                                        <i class="fas fa-chevron-right ml-2 text-xs"></i>
-                                    </a>
+    <section class="w-full bg-primary text-white pt-8 md:pt-10 pb-6 px-2 sm:px-0">
+        <div class="container mx-auto px-2 sm:px-4 max-w-7xl">
+            <div class="relative w-full">
+                <div class="swiper heroSwiper overflow-hidden relative group]">
+                    <div class="swiper-wrapper">
+                        <!-- @php
+                            $latestEvent = $events->where('status', 'open')->first() ?? $events->sortByDesc('date_start')->first();
+                            $latestEventUrl = $latestEvent ? route('event.show', $latestEvent->event_code) : route('event.index');
+                        @endphp
 
-                                    {{-- Tombol Semua Jadwal --}}
-                                    <a href="{{ route('event.index') }}"
-                                    class="inline-flex items-center px-6 py-3 bg-secondary text-white text-sm font-bold rounded-xl shadow-lg hover:bg-orange-600 transition">
-                                        Semua Jadwal 
-                                        <i class="fas fa-chevron-right ml-2 text-xs"></i>
-                                    </a>
+                        @if($events->first())
+
+                        {{-- Slide 1: Desktop existing layout --}}
+                        <div class="swiper-slide hidden md:block">
+                            <div class="flex flex-col md:flex-row items-center gap-2">
+                                <div class="lg:w-7/12 text-center lg:text-left">
+                                    <h1 class="text-lg lg:text-2xl font-bold mb-2 lg:mb-10 opacity-90 leading-relaxed">
+                                        Unlock.co.id menghadirkan webinar dan E-Course terbaik dengan praktisi industri.
+                                    </h1>
+                                    <p class="text-base md:text-lg font-light mb-2 md:mb-6 opacity-90">
+                                        Daftarkan dirimu segera di webinar terbaru kami dan tingkatkan skill profesionalmu bersama mentor berpengalaman.
+                                    </p>
+                                    <div class="flex flex-wrap justify-center lg:justify-start gap-3 mb-6">
+                                        <a href="{{ $latestEventUrl }}" class="inline-flex items-center px-6 py-3 bg-secondary text-white text-sm font-bold rounded-xl shadow-lg hover:bg-orange-600 transition">
+                                            Daftar Sekarang
+                                            <i class="fas fa-chevron-right ml-2 text-xs"></i>
+                                        </a>
+                                        <a href="{{ route('event.index') }}" class="inline-flex items-center px-6 py-3 bg-secondary text-white text-sm font-bold rounded-xl shadow-lg hover:bg-orange-600 transition">
+                                            Semua Jadwal
+                                            <i class="fas fa-chevron-right ml-2 text-xs"></i>
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="lg:w-5/12 w-full relative">
-                                @if($latestEvent)
-                                    <a href="{{ route('event.show', $latestEvent->event_code) }}" class="relative group">
-                                        {{-- Decorative background elements --}}
-                                        <div class="absolute -inset-1 bg-gradient-to-r from-secondary to-purple-500 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
-                                        
-                                        <div class="relative bg-white/5 backdrop-blur-xl p-3 rounded-[2rem] border border-white/20 shadow-2xl">
-                                            <div class="aspect-video overflow-hidden rounded-[1.5rem] relative">
-                                                <div class="absolute hidden sm:block top-3 right-3 flex justify-center px-2 py-2 text-xs font-semibold rounded-full bg-secondary/90">
-                                                    <p class="text-white font-bold">Event Baru</p>
-                                                </div>
-                                                @if($latestEvent->kv_path)
-                                                    <img src="{{ asset('storage/'.$latestEvent->kv_path) }}" 
-                                                        alt="{{ $latestEvent->event_title }}"
-                                                        class="w-full h-full object-cover">
-                                                @else
-                                                    <div class="w-full h-full bg-white/10 flex items-center justify-center">
-                                                        <i class="fas fa-image text-5xl text-white/20"></i>
+                                <div class="lg:w-5/12 w-[70%] relative hidden md:block">
+                                    @if($latestEvent)
+                                        <a href="{{ $latestEventUrl }}" class="relative group">
+                                            <div class="absolute -inset-1 bg-gradient-to-r from-secondary to-purple-500 rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
+                                            <div class="relative bg-white/5 backdrop-blur-xl p-3 rounded-[2rem] border border-white/20 shadow-2xl">
+                                                <div class="aspect-video overflow-hidden rounded-[1.5rem] relative">
+                                                    <div class="absolute hidden md:block top-3 right-3 flex justify-center px-2 py-2 text-xs font-semibold rounded-full bg-secondary/90">
+                                                        <p class="text-white font-bold">Event Baru</p>
                                                     </div>
-                                                @endif
-
-                                                {{-- Informasi Singkat di Atas Gambar --}}
-                                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4">
-                                                    <h3 class="text-md md:text-xl font-bold text-white line-clamp-2">
-                                                        {{ $latestEvent->event_title }}
-                                                    </h3>
+                                                    @if($latestEvent->kv_path)
+                                                        <img src="{{ asset('storage/'.$latestEvent->kv_path) }}" alt="{{ $latestEvent->event_title }}" class="w-full h-full object-cover">
+                                                    @else
+                                                        <div class="w-full h-full bg-white/10 flex items-center justify-center">
+                                                            <i class="fas fa-image text-5xl text-white/20"></i>
+                                                        </div>
+                                                    @endif
+                                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4">
+                                                        <h3 class="text-sm md:text-md lg:text-xl font-bold text-white line-clamp-2">
+                                                            {{ $latestEvent->event_title }}
+                                                        </h3>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        </a>
+                                    @else
+                                        <div class="relative bg-white/5 border border-white/20 rounded-[2rem] p-12 text-center backdrop-blur-sm">
+                                            <i class="fas fa-laptop-code text-6xl text-white/20 mb-4"></i>
+                                            <p class="text-white/60">Siapkan dirimu untuk webinar inspiratif berikutnya!</p>
                                         </div>
-                                    </a>
-                                @else
-                                    {{-- Placeholder jika tidak ada event --}}
-                                    <div class="relative bg-white/5 border border-white/20 rounded-[2rem] p-12 text-center backdrop-blur-sm">
-                                        <i class="fas fa-laptop-code text-6xl text-white/20 mb-4"></i>
-                                        <p class="text-white/60">Siapkan dirimu untuk webinar inspiratif berikutnya!</p>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-
-                    {{-- Slide 2: Promo / Welcome Banner --}}
-                    <!-- <div class="swiper-slide">
-                        <div class="flex flex-col lg:flex-row items-center gap-8">
-                            <div class="lg:w-7/12 text-center lg:text-left">
-                                <h1 class="text-3xl md:text-4xl font-bold mb-4 leading-tight">
-                                    Selamat Datang di Unlock Indonesia
-                                </h1>
-                                <p class="text-base md:text-lg font-light mb-8 opacity-90">
-                                    Platform webinar & pelatihan online terbaik untuk membantu Anda membuka seluruh potensi yang dimiliki.
-                                </p>
-                                <a href="{{ route('registration.create') }}"
-                                class="bg-white text-primary px-6 py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition shadow-lg inline-flex items-center">
-                                    Gabung Sekarang <i class="fas fa-user-plus ml-2 text-xs"></i>
-                                </a>
-                            </div>
-                            <div class="lg:w-4/12 flex justify-center">
-                                {{-- Placeholder/Asset Image untuk Banner Umum --}}
-                                <div class="w-full max-w-[320px] aspect-square rounded-2xl bg-white/10 border-4 border-white/10 flex items-center justify-center backdrop-blur-sm">
-                                    <i class="fas fa-graduation-cap text-6xl text-white/30"></i>
+                                    @endif
                                 </div>
                             </div>
                         </div>
-                    </div> -->
+                        @endif -->
 
+                        {{-- Slide 1: Unlock --}}
+                        <div class="swiper-slide">
+                            <a href="{{ route('registration.create') }}" class="flex items-center justify-center w-full">
+                                <div class="w-full sm:aspect-[4/1] relative overflow-hidden">
+                                    <img src="{{ asset('assets/images/promo/ka8jj25Jbnsk17hhaN.png') }}" alt="Unlock Indonesia" class="w-full h-full object-cover">
+                                </div>
+                            </a>
+                        </div>
+
+                        {{-- Slide 2: Promo Image --}}
+                        <div class="swiper-slide">
+                            <a href="{{ route('ecourse.catalog') }}" class="flex items-center justify-center w-full">
+                                <div class="w-full sm:aspect-[4/1] relative overflow-hidden shadow-md border border-white/20">
+                                    <img src="{{ asset('assets/images/promo/Kdnd7H4jad25Ndk.png') }}" alt="Diskon 20% Ecourse Package" class="w-full h-full object-cover">
+                                </div>
+                            </a>
+                        </div>
+
+                    </div>
+
+                    {{-- Paginasi Bulat Bawah --}}
+                    <div class="hero-pagination !relative !mt-4 flex justify-center lg:justify-start"></div>
                 </div>
-
-                {{-- Paginasi Bulat Bawah --}}
-                <div class="hero-pagination !relative !mt-8 flex justify-center lg:justify-start"></div>
             </div>
         </div>
     </section>
+    <style>
+        .hero-pagination.swiper-pagination-bullets {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .hero-pagination.swiper-pagination-bullets .swiper-pagination-bullet {
+            width: 2.15rem;
+            height: 0.45rem;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.24) !important;
+            opacity: 1;
+            transition: width 0.25s ease, background-color 0.25s ease;
+        }
+
+        .hero-pagination.swiper-pagination-bullets .swiper-pagination-bullet.swiper-pagination-bullet-active {
+            width: 3rem;
+            background: rgba(255, 255, 255, 0.98) !important;
+        }
+    </style>
 
 
     <!-- 1.5 E-Course Categories (Hero Style Background) -->
-    <section class="w-full bg-gradient-to-br from-primary to-purple-800 text-white py-6 md:py-12">
+    <section class="w-full bg-gradient-to-b from-primary to-purple-800 text-white py-6 md:py-8 px-2 sm:px-0">
         <div class="container mx-auto px-4 max-w-7xl">
-            <div class="flex flex-col lg:flex-row items-center gap-6">
+            <div class="flex flex-col md:flex-row items-center gap-3 md:gap-6">
                 <div class="lg:w-4/12">
-                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Unlock E-Course</h2>
-                    <p class="text-base md:text-lg text-white/90 mb-2">Pelajari topik-topik profesional secara mendalam melalui E-Course kami. Pilih kategori untuk menemukan kursus yang sesuai dengan kebutuhanmu.</p>
+                    <h2 class="text-xl md:text-2xl font-bold mb-4">Unlock E-Course</h2>
+                    <p class="text-xs md:text-sm text-white/90 mb-2">Pelajari topik-topik profesional secara mendalam melalui E-Course kami. Pilih kategori untuk menemukan kursus yang sesuai dengan kebutuhanmu.</p>
                 </div>
                 <div class="lg:w-8/12 w-full">
-                    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3">
-                            <a href="{{ route('ecourse.catalog') }}" class="flex items-center gap-3 p-3 bg-white/10 hover:bg-white/20 rounded-lg transition" aria-label="Semua Kategori">
+                    <div class="grid grid-cols-3 xl:grid-cols-5 gap-3">
+                            <a href="{{ route('ecourse.catalog') }}" class="flex items-center gap-2 sm:gap-3 p-1.5 sm:p-3 bg-white/10 hover:bg-white/20 rounded-lg transition" aria-label="Semua Kategori">
                                 <div class="min-w-10 min-h-10 rounded-md bg-white/10 flex items-center justify-center">
                                     <i class="fas fa-th-large text-white"></i>
                                 </div>
                                 <div class="text-left">
-                                    <div class="font-semibold text-sm">Semua Kategori</div>
+                                    <div class="font-semibold text-xs sm:text-sm">Semua Kategori</div>
                                 </div>
                             </a>
                         @foreach($categories as $cat)
-                            <a href="{{ route('ecourse.catalog', ['category' => $cat->slug]) }}" class="flex items-center gap-3 p-3 bg-white/10 hover:bg-white/20 rounded-lg transition">
+                            <a href="{{ route('ecourse.catalog', ['category' => $cat->slug]) }}" class="flex items-center gap-2 sm:gap-3 p-1.5 sm:p-3 bg-white/10 hover:bg-white/20 rounded-lg transition">
                                 <div class="min-w-10 min-h-10 rounded-md bg-white/10 flex items-center justify-center">
                                     <i class="{{ $cat->icon }} text-white text-xl"></i>
                                 </div>
                                 <div class="text-left">
-                                    <div class="font-semibold text-sm">{{ $cat->name }}</div>
+                                    <div class="font-semibold text-xs sm:text-sm">{{ $cat->name }}</div>
                                 </div>
                             </a>
                         @endforeach
@@ -153,10 +159,10 @@
     <!-- 2. Open Events Section (Full Width Background Gray) -->
     <section class="w-full py-8 md:py-16 bg-gray-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4">
+            <h2 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-4">
                 Event yang Sedang Dibuka
             </h2>
-            <p class="text-center text-gray-600 mb-12">
+            <p class="text-center text-gray-600 mb-6 md:mb-12">
                 Pilih webinar atau pelatihan yang sesuai dengan kebutuhanmu
             </p>
 

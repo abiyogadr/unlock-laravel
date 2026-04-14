@@ -54,6 +54,12 @@
                 <i class="fas fa-link w-5"></i>
                 <span>Landing Pages</span>
             </a>
+
+            <a href="{{ route('admin.short-links.index') }}" 
+               class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all {{ request()->routeIs('admin.short-links.*') ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-50 hover:text-primary hover:shadow-sm' }}">
+                <i class="fas fa-scissors w-5"></i>
+                <span>Short Links</span>
+            </a>
         </nav>
     </aside>
 

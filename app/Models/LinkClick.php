@@ -10,6 +10,7 @@ class LinkClick extends Model
     protected $fillable = [
         'landing_page_id',
         'landing_page_link_id',
+        'short_link_id',
         'ip_address',
         'user_agent',
         'referer',
@@ -28,5 +29,10 @@ class LinkClick extends Model
     public function link(): BelongsTo
     {
         return $this->belongsTo(LandingPageLink::class, 'landing_page_link_id');
+    }
+
+    public function shortLink(): BelongsTo
+    {
+        return $this->belongsTo(ShortLink::class);
     }
 }

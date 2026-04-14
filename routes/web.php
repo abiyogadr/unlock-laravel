@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\{
     AdminEventController,
     AdminPacketController,
     AdminRegistrationController,
+    AdminShortLinkController,
     AdminSpeakerController
 };
 use App\Http\Controllers\Auth\AuthController;
@@ -25,6 +26,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\ToolsController;
 use App\Http\Controllers\Ecourse\EcourseController;
 use App\Http\Controllers\Ecourse\CourseController;
+use App\Http\Controllers\ShortLinkController;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -37,6 +39,9 @@ Route::get('/events', [EventController::class, 'index'])
     ->name('event.index');
 Route::get('/event/{event_code}', [EventController::class, 'show'])
     ->name('event.show');
+
+Route::get('/u/{shortLink:short_code}', [ShortLinkController::class, 'show'])
+    ->name('short-links.show');
 
 /**CERTIFICATE */
 // Halaman form input ID
@@ -161,6 +166,7 @@ Route::prefix('upanel')->middleware(['auth', 'admin'])->name('admin.')->group(fu
     Route::get('/ecourse/summary', [AdminEcourseController::class, 'summary'])->name('ecourse.summary');
     Route::get('/ecourse/export', [AdminEcourseController::class, 'export'])->name('ecourse.export');
     Route::get('/ecourse/transactions/{transaction}', [AdminEcourseController::class, 'show'])->name('ecourse.show');
+    Route::resource('short-links', AdminShortLinkController::class);
     
     Route::resource('events', AdminEventController::class);
     Route::resource('packets', AdminPacketController::class);
