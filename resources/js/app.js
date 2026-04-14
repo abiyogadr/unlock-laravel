@@ -45,11 +45,13 @@ function createPromoPopup() {
             <div class="relative">
                 <button type="button"
                         data-promo-close
-                        class="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/70 text-white transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-white cursor-pointer"
+                        class="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/20 text-white transition hover:bg-black/50 focus:outline-none focus:ring-2 focus:ring-white cursor-pointer"
                         aria-label="Tutup promo">
                     <i class="fas fa-times text-sm"></i>
                 </button>
-                <img src="${PROMO_IMAGE_URL}" alt="Promo" class="h-auto w-full object-cover">
+                <a href="/ecourse" class="block">
+                    <img src="${PROMO_IMAGE_URL}" alt="Promo" class="h-auto w-full object-cover">
+                </a>
             </div>
         </div>
     `;
