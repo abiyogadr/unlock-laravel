@@ -11,7 +11,7 @@ Alpine.start();
 
 const PROMO_STORAGE_KEY = 'unlock-promo-closed-at';
 const PROMO_INTERVAL_MS = 3 * 60 * 60 * 1000;
-const PROMO_IMAGE_URL = '/assets/images/promo/lkasd65asdui298dy.jpeg';
+const PROMO_IMAGE_URL = '/assets/images/p/lkasd65asdui298dy.jpeg';
 
 function shouldShowPromo() {
     try {

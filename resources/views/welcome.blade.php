@@ -77,7 +77,7 @@
                         <div class="swiper-slide">
                             <a href="{{ route('registration.create') }}" class="flex items-center justify-center w-full">
                                 <div class="w-full sm:aspect-[4/1] relative overflow-hidden">
-                                    <img src="{{ asset('assets/images/promo/ka8jj25Jbnsk17hhaN.png') }}" alt="Unlock Indonesia" class="w-full h-full object-cover">
+                                    <img src="{{ asset('assets/images/p/ka8jj25Jbnsk17hhaN.png') }}" alt="Unlock Indonesia" class="w-full h-full object-cover">
                                 </div>
                             </a>
                         </div>
@@ -86,7 +86,7 @@
                         <div class="swiper-slide">
                             <a href="{{ route('ecourse.catalog') }}" class="flex items-center justify-center w-full">
                                 <div class="w-full sm:aspect-[4/1] relative overflow-hidden shadow-md border border-white/20">
-                                    <img src="{{ asset('assets/images/promo/Kdnd7H4jad25Ndk.png') }}" alt="Diskon 20% Ecourse Package" class="w-full h-full object-cover">
+                                    <img src="{{ asset('assets/images/p/Kdnd7H4jad25Ndk.png') }}" alt="Diskon 20% Ecourse Package" class="w-full h-full object-cover">
                                 </div>
                             </a>
                         </div>
