@@ -41,4 +41,8 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URL'),
     ],
 
+    'meta' => [
+        'pixel_id' => env('META_PIXEL_ID', ''),
+    ],
+
 ];

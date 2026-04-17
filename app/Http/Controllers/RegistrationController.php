@@ -117,11 +117,22 @@ class RegistrationController extends Controller
         return response()->json($packets);
     }
 
+    public function getProvinces()
+    {
+        $provinces = Area::query()
+            ->whereRaw('LENGTH(kode) = 2')
+            ->orderBy('nama')
+            ->get(['kode', 'nama']);
+
+        return response()->json($provinces);
+    }
+
     public function getRegencies($provinceCode)
     {
         $regencies = Area::where('kode', 'like', "$provinceCode.%")
                             ->whereRaw('LENGTH(kode)=5')
-                            ->get();
+                            ->orderBy('nama')
+                            ->get(['kode', 'nama']);
 
         return response()->json($regencies);
     }

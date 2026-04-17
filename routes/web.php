@@ -76,6 +76,7 @@ Route::withoutMiddleware([VerifyCsrfToken::class])
     ->name('midtrans.callback');
 
 // Endpoint AJAX (Biasanya public untuk form registrasi)
+Route::get('/registration/provinces', [RegistrationController::class, 'getProvinces']);
 Route::get('/registration/regencies/{provinceCode}', [RegistrationController::class, 'getRegencies']);
 Route::get('/registration/packets/{event}', [RegistrationController::class, 'getPackets']);
 
@@ -208,3 +209,6 @@ require base_path('routes/ecourse-inertia.php');
 
 /**LANDING PAGE */
 require base_path('routes/landing-page.php');
+
+/**ADS LANDING PAGES */
+require base_path('routes/ads.php');

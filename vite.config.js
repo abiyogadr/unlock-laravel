@@ -13,6 +13,7 @@ export default defineConfig({
                 'resources/js/landing-page/main.js',
                 'resources/js/certificate.js',
                 'resources/js/registration.js',
+                'resources/js/ads/bootcamp-coretax.js',
             ],
         }),
         tailwindcss(),
