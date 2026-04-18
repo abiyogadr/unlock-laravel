@@ -40,8 +40,8 @@
             registrationUrl: '{{ url('/event/bootcamp-coretax') }}',
             whatsappUrl:     '{{ $whatsappUrl }}',
             pixelId:         '{{ $pixelId }}',  
-            eventId:         193,
-            packetId:        107,
+            eventId:         199,
+            packetId:        114,
             @if($authUser)
             user: {
                 name:       @json($authUser->name),
