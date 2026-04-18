@@ -39,7 +39,7 @@
         window.__PAGE_CONFIG__ = {
             registrationUrl: '{{ url('/event/bootcamp-coretax') }}',
             whatsappUrl:     '{{ $whatsappUrl }}',
-            pixelId:         '{{ $pixelId }}',
+            pixelId:         '{{ $pixelId }}',  
             eventId:         193,
             packetId:        107,
             @if($authUser)
