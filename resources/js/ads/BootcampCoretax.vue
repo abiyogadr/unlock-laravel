@@ -676,9 +676,7 @@ onMounted(() => {
 
                     <!-- Avatar -->
                     <div class="relative inline-flex mb-5">
-                        <div class="w-28 h-28 rounded-full bg-gradient-to-br from-purple-400 via-violet-500 to-orange-400 flex items-center justify-center shadow-2xl shadow-purple-900/50 animate-float ring-4 ring-white/10">
-                            <span class="text-white text-3xl font-extrabold">LF</span>
-                        </div>
+                        <img src="/storage/avatars/1640232585295.jpg" alt="Lili Fajri Dailimi" class="w-28 h-28 rounded-full object-cover shadow-2xl shadow-purple-900/50 animate-float ring-4 ring-white/10" />
                         <div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-green-400 border-2 border-[var(--c-800)] flex items-center justify-center">
                             <i class="fas fa-check text-white text-xs"></i>
                         </div>
