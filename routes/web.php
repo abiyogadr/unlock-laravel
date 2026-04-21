@@ -27,6 +27,8 @@ use App\Http\Controllers\ToolsController;
 use App\Http\Controllers\Ecourse\EcourseController;
 use App\Http\Controllers\Ecourse\CourseController;
 use App\Http\Controllers\ShortLinkController;
+use App\Mail\TestMail;
+use Illuminate\Support\Facades\Mail;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -212,3 +214,15 @@ require base_path('routes/landing-page.php');
 
 /**ADS LANDING PAGES */
 require base_path('routes/ads.php');
+
+Route::get('/test-email', function () {
+    $data = [
+        'name'  => 'Nama Pengirim',   // ganti sesuai keinginan
+        'message'=> 'Ini adalah email tes setelah .env diubah'
+    ];
+
+    // Ganti alamat tujuan dengan email yang ingin Anda periksa
+    Mail::to('abiyogadr@gmail.com')->send(new TestMail($data));
+
+    return 'Email tes berhasil dikirim!';
+});
