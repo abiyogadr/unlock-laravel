@@ -4,7 +4,7 @@
     <aside 
       v-if="!page.props.embed"
       :class="[
-        'fixed inset-y-0 left-0 z-100 w-64 bg-gradient-to-br from-primary to-purple-800',
+        'fixed inset-y-0 left-0 z-110 w-64 bg-gradient-to-br from-primary to-purple-800',
         'transform transition-transform duration-300 shadow-2xl',
         'xl:translate-x-0',
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
